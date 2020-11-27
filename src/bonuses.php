@@ -30,6 +30,8 @@ $seenCurves = [];
 $bonusNames = [];
 $bonusCurves = [];
 $bonusLevels = [];
+$nameToBonus = [];
+$excludeNameBonus = [];
 
 echo "Scanning bonuses...\n";
 foreach ($bonusReader->generateRecords() as $rec) {
@@ -38,6 +40,9 @@ foreach ($bonusReader->generateRecords() as $rec) {
         exit;
     }
     $bonusId = $rec['ParentItemBonusListID'];
+    if ($rec['Type'] !== 5) {
+        $excludeNameBonus[$bonusId] = $bonusId;
+    }
     switch ($rec['Type']) {
         case 1: // Adjust item level
             $bonusLevels[$bonusId] = $rec['Value'][0];
@@ -46,6 +51,7 @@ foreach ($bonusReader->generateRecords() as $rec) {
             list($nameId, $priority) = $rec['Value'];
             $seenNames[$nameId] = true;
             $bonusNames[$bonusId] = [$priority, $nameId];
+            $nameToBonus[$nameId][] = $bonusId;
             break;
         case 13: // Scale item level
             list($oldDist, $priority, $contentTuningId, $curveId) = $rec['Value'];
@@ -55,6 +61,19 @@ foreach ($bonusReader->generateRecords() as $rec) {
     }
 }
 unset($bonusReader);
+
+// Determine bonus IDs which onnly add a name and do nothing else.
+foreach ($nameToBonus as $nameId => &$bonuses) {
+    $validBonuses = array_values(array_diff($bonuses, $excludeNameBonus));
+    if ($validBonuses) {
+        $bonuses = $validBonuses[0];
+    } else {
+        $bonuses = false;
+    }
+};
+unset($bonuses);
+$nameToBonus = array_filter($nameToBonus);
+unset($excludeNameBonus);
 
 echo "Opening Name reader...\n";
 $nameReader = getReader('ItemNameDescription');
@@ -66,7 +85,7 @@ foreach (array_keys($seenNames) as $nameId) {
         echo "Could not get name {$nameId}\n";
         continue;
     }
-    $nameSuffixes[$nameId] = $nameRow['Description_lang'];
+    $nameSuffixes[$nameId] = ['name' => $nameRow['Description_lang'], 'bonus' => $nameToBonus[$nameId] ?? null];
 }
 unset($nameReader, $seenNames);
 
