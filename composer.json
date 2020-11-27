@@ -1,0 +1,15 @@
+{
+    "name": "erorus/shatari-data",
+    "description": "exports data from db2 files to support shatari",
+    "type": "project",
+    "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/erorus/db2.git"
+        }
+    ],
+    "require": {
+        "erorus/db2": "dev-master"
+    }
+}

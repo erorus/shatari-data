@@ -1,0 +1,11 @@
+892586 DBFilesClient/CurvePoint.db2
+1394440 DBFilesClient/GlobalStrings.db2
+841626 DBFilesClient/Item.db2
+982462 DBFilesClient/ItemAppearance.db2
+959070 DBFilesClient/ItemBonus.db2
+1140189 DBFilesClient/ItemClass.db2
+982457 DBFilesClient/ItemModifiedAppearance.db2
+1332559 DBFilesClient/ItemNameDescription.db2
+1572924 DBFilesClient/ItemSparse.db2
+1261604 DBFilesClient/ItemSubClass.db2
+1375801 DBFilesClient/ManifestInterfaceData.db2
