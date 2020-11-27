@@ -139,7 +139,7 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         'icon' => $getIcon($itemIcons[$id] ?? $itemRec['IconFileDataID']),
         'quality' => $sparseRec['OverallQualityID'],
         //'vendorBuy' => $sparseRec['BuyPrice'],
-        'vendorSell' => $sparseRec['SellPrice'],
+        //'vendorSell' => $sparseRec['SellPrice'],
     ];
     if ($sparseRec['Flags'][1] & FLAGS_1_HORDE) {
         $items[$id]['side'] = SIDE_HORDE;
