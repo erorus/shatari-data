@@ -29,7 +29,6 @@ define('SIDE_HORDE', 2);
 define('SIDE_ALLIANCE', 1);
 
 define('FORBIDDEN_CLASSES', [
-    CLASS_BATTLE_PET,
     CLASS_WOW_TOKEN,
 ]);
 
