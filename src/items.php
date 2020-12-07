@@ -45,6 +45,7 @@ function getReader(string $db2Name) {
 }
 
 $appearanceToIcon = [];
+$appearanceToDisplay = [];
 echo "Opening Appearance reader...\n";
 $itemAppearanceReader = getReader('ItemAppearance');
 $itemAppearanceReader->fetchColumnNames();
@@ -52,11 +53,16 @@ foreach ($itemAppearanceReader->generateRecords() as $id => $rec) {
     if ($rec['DefaultIconFileDataID']) {
         $appearanceToIcon[$id] = $rec['DefaultIconFileDataID'];
     }
+    if ($rec['ItemDisplayInfoID']) {
+        $appearanceToDisplay[$id] = $rec['ItemDisplayInfoID'];
+    }
 }
 unset($itemAppearanceReader);
 echo sprintf("Found %d appearance records with icons.\n", count($appearanceToIcon));
+echo sprintf("Found %d appearance records with displays.\n", count($appearanceToDisplay));
 
 $itemIcons = [];
+$itemDisplays = [];
 echo "Opening Appearance Mods reader...\n";
 $itemModifiedAppearanceReader = getReader('ItemModifiedAppearance');
 $itemModifiedAppearanceReader->fetchColumnNames();
@@ -67,11 +73,14 @@ foreach ($itemModifiedAppearanceReader->generateRecords() as $rec) {
         continue;
     }
     if ($rec['OrderIndex'] === 0 || !isset($itemIcons[$itemId])) {
-        $itemIcons[$itemId] = $appearanceToIcon[$appearanceId];
+        $itemIcons[$itemId] = $appearanceToIcon[$appearanceId] ?? $itemIcons[$itemId] ?? null;
+    }
+    if ($rec['OrderIndex'] === 0 || !isset($itemDisplays[$itemId])) {
+        $itemDisplays[$itemId] = $appearanceToDisplay[$appearanceId] ?? $itemDisplays[$itemId] ?? null;
     }
 }
-unset($itemModifiedAppearanceReader, $appearanceToIcon);
-echo sprintf("Found %d icon associations for items.\n", count($itemIcons));
+unset($itemModifiedAppearanceReader, $appearanceToIcon, $appearanceToDisplay);
+echo sprintf("Found %d icon associations, %d displays for items.\n", count($itemIcons), count($itemDisplays));
 
 
 $items = [];
@@ -165,6 +174,10 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
             $items[$id]['inventoryType'] = $itemRec['InventoryType'];
             // no break
         case CLASS_WEAPON:
+            if (isset($itemDisplays[$id])) {
+                $items[$id]['display'] = $itemDisplays[$id];
+            }
+            // no break
         case CLASS_GEM:
         case CLASS_ITEM_ENHANCEMENT:
             $items[$id]['itemLevel'] = $sparseRec['ItemLevel'];
