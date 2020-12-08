@@ -67,8 +67,8 @@ foreach ($speciesReader->generateRecords() as $id => $rec) {
     $pet = [
         'npc' => $rec['CreatureID'],
         'icon' => $getIcon($rec['IconFileDataID']),
-        'type' => $rec['PetTypeEnum'],
-        'display' => $npc['DisplayID'][0]
+        'type' => $rec['PetTypeEnum'] + 1,
+        'display' => $npc['DisplayID'][0],
     ];
     if ($rec['Flags'] & FLAG_HORDE_ONLY) {
         $pet['side'] = SIDE_HORDE;

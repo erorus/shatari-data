@@ -20,6 +20,7 @@ define('CLASS_RECIPE', 9);
 define('CLASS_QUESTITEM', 12);
 define('CLASS_MISCELLANEOUS', 15);
 define('CLASS_GLYPH', 16);
+define('CLASS_BATTLE_PET', 17);
 
 define('SUBCLASS_WEAPON_AXE1H', 0);
 define('SUBCLASS_WEAPON_AXE2H', 1);
@@ -51,6 +52,7 @@ define('SUBCLASS_ARMOR_SHIELD', 6);
 define('SUBCLASS_RECIPE_BOOK', 0);
 define('SUBCLASS_MISCELLANEOUS_JUNK', 0);
 define('SUBCLASS_MISCELLANEOUS_REAGENT', 1);
+define('SUBCLASS_MISCELLANEOUS_COMPANION_PET', 2);
 define('SUBCLASS_MISCELLANEOUS_HOLIDAY', 3);
 define('SUBCLASS_MISCELLANEOUS_OTHER', 4);
 define('SUBCLASS_MISCELLANEOUS_MOUNT', 5);
@@ -357,6 +359,25 @@ $result[] = [
     'class' => CLASS_RECIPE,
     'subcategories' => $getSubclassCategories(CLASS_RECIPE),
 ];
+
+// Battle Pets
+$battlePetCategory = [
+    'name' => $globalStrings['AUCTION_CATEGORY_BATTLE_PETS'],
+    'class' => CLASS_BATTLE_PET,
+    'subcategories' => [],
+];
+for ($type = 1; $type <= 10; $type++) {
+    $battlePetCategory['subcategories'][] = [
+        'name' => $globalStrings["BATTLE_PET_NAME_{$type}"],
+        'class' => CLASS_BATTLE_PET,
+        'subClass' => $type,
+    ];
+}
+$companionSubcategory = $makeSubclassCategory(CLASS_MISCELLANEOUS, SUBCLASS_MISCELLANEOUS_COMPANION_PET);
+$companionSubcategory['class'] = CLASS_BATTLE_PET;
+$companionSubcategory['subClass'] = 0;
+$battlePetCategory['subcategories'][] = $companionSubcategory;
+$result[] = $battlePetCategory;
 
 // Quest Items
 $result[] = [
