@@ -1,3 +1,5 @@
+841622 DBFilesClient/BattlePetSpecies.db2
+841631 DBFilesClient/Creature.db2
 892586 DBFilesClient/CurvePoint.db2
 1394440 DBFilesClient/GlobalStrings.db2
 841626 DBFilesClient/Item.db2
