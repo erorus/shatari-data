@@ -69,6 +69,9 @@ foreach ($speciesReader->generateRecords() as $id => $rec) {
         'icon' => $getIcon($rec['IconFileDataID']),
         'type' => $rec['PetTypeEnum'] + 1,
         'display' => $npc['DisplayID'][0],
+        'power' => 8,
+        'stamina' => 8,
+        'speed' => 8,
     ];
     if ($rec['Flags'] & FLAG_HORDE_ONLY) {
         $pet['side'] = SIDE_HORDE;
@@ -79,6 +82,30 @@ foreach ($speciesReader->generateRecords() as $id => $rec) {
 
     $pets[$id] = $pet;
     $names[$id] = $npc['Name_lang'];
+}
+
+unset($creatureReader, $fileListReader, $speciesReader);
+
+echo "Opening Species State reader...\n";
+$speciesStateReader = getReader('BattlePetSpeciesState');
+$speciesStateReader->fetchColumnNames();
+
+foreach ($speciesStateReader->generateRecords() as $rec) {
+    if (!isset($pets[$rec['BattlePetSpeciesID']])) {
+        continue;
+    }
+
+    switch ($rec['BattlePetStateID']) {
+        case 18:
+            $pets[$rec['BattlePetSpeciesID']]['power'] = 8 + $rec['Value'] * 0.005;
+            break;
+        case 19:
+            $pets[$rec['BattlePetSpeciesID']]['stamina'] = 8 + $rec['Value'] * 0.005;
+            break;
+        case 20:
+            $pets[$rec['BattlePetSpeciesID']]['speed'] = 8 + $rec['Value'] * 0.005;
+            break;
+    }
 }
 
 file_put_contents("{$outPath}/battlepets.json", json_encode($pets, JSON_UNESCAPED_SLASHES));
