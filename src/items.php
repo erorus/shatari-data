@@ -24,7 +24,7 @@ define('BOND_QUEST_2', 5);
 define('FLAGS_0_CONJURED', 0x2);
 define('FLAGS_1_HORDE', 0x1);
 define('FLAGS_1_ALLIANCE', 0x2);
-define('FLAGS_2_OVERRIDE_GOLD_COST', 0x4000);
+define('FLAGS_1_OVERRIDE_GOLD_COST', 0x4000);
 
 define('INV_TYPE_HEAD', 1);
 define('INV_TYPE_NECK', 2);
@@ -265,7 +265,7 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
             }
             break;
     }
-    if ($sparseRec['Flags'][2] & FLAGS_2_OVERRIDE_GOLD_COST) {
+    if ($sparseRec['Flags'][1] & FLAGS_1_OVERRIDE_GOLD_COST) {
         $priceBaseType = null;
     }
     if (!is_null($priceBaseType)) {
