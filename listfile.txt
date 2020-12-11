@@ -3,12 +3,17 @@
 841631 DBFilesClient/Creature.db2
 892586 DBFilesClient/CurvePoint.db2
 1394440 DBFilesClient/GlobalStrings.db2
+1121229 DBFilesClient/ImportPriceArmor.db2
+1121228 DBFilesClient/ImportPriceQuality.db2
+1121227 DBFilesClient/ImportPriceShield.db2
+1121230 DBFilesClient/ImportPriceWeapon.db2
 841626 DBFilesClient/Item.db2
 982462 DBFilesClient/ItemAppearance.db2
 959070 DBFilesClient/ItemBonus.db2
 1140189 DBFilesClient/ItemClass.db2
 982457 DBFilesClient/ItemModifiedAppearance.db2
 1332559 DBFilesClient/ItemNameDescription.db2
+1121231 DBFilesClient/ItemPriceBase.db2
 1572924 DBFilesClient/ItemSparse.db2
 1261604 DBFilesClient/ItemSubClass.db2
 1375801 DBFilesClient/ManifestInterfaceData.db2

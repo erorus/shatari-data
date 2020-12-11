@@ -24,9 +24,45 @@ define('BOND_QUEST_2', 5);
 define('FLAGS_0_CONJURED', 0x2);
 define('FLAGS_1_HORDE', 0x1);
 define('FLAGS_1_ALLIANCE', 0x2);
+define('FLAGS_2_OVERRIDE_GOLD_COST', 0x4000);
+
+define('INV_TYPE_HEAD', 1);
+define('INV_TYPE_NECK', 2);
+define('INV_TYPE_SHOULDERS', 3);
+define('INV_TYPE_SHIRT', 4);
+define('INV_TYPE_CHEST', 5);
+define('INV_TYPE_WAIST', 6);
+define('INV_TYPE_LEGS', 7);
+define('INV_TYPE_FEET', 8);
+define('INV_TYPE_WRISTS', 9);
+define('INV_TYPE_HANDS', 10);
+define('INV_TYPE_FINGER', 11);
+define('INV_TYPE_TRINKET', 12);
+define('INV_TYPE_ONE_HAND', 13);
+define('INV_TYPE_SHIELD', 14);
+define('INV_TYPE_RANGED', 15);
+define('INV_TYPE_BACK', 16);
+define('INV_TYPE_TWO_HAND', 17);
+define('INV_TYPE_BAG', 18);
+define('INV_TYPE_TABARD', 19);
+define('INV_TYPE_ROBE', 20);
+define('INV_TYPE_MAIN_HAND', 21);
+define('INV_TYPE_OFF_HAND', 22);
+define('INV_TYPE_HELD_IN_OFF_HAND', 23);
+define('INV_TYPE_PROJECTILE', 24);
+define('INV_TYPE_THROWN', 25);
+define('INV_TYPE_RANGED_RIGHT', 26);
+define('INV_TYPE_QUIVER', 27);
+define('INV_TYPE_RELIC', 28);
 
 define('SIDE_HORDE', 2);
 define('SIDE_ALLIANCE', 1);
+
+define('SUBCLASS_ARMOR_CLOTH', 1);
+define('SUBCLASS_ARMOR_LEATHER', 2);
+define('SUBCLASS_ARMOR_MAIL', 3);
+define('SUBCLASS_ARMOR_PLATE', 4);
+define('SUBCLASS_GEM_RELIC', 11);
 
 define('FORBIDDEN_CLASSES', [
     CLASS_WOW_TOKEN,
@@ -42,6 +78,35 @@ function getReader(string $db2Name) {
         new HotfixedReader("{$db2Path}/{$db2Name}.db2", $hotfixPath) :
         new Reader("{$db2Path}/{$db2Name}.db2");
 }
+
+echo "Opening import price readers...\n";
+$itemClassReader = getReader('ItemClass');
+$itemClassReader->fetchColumnNames();
+$classPriceMods = [];
+foreach ($itemClassReader->generateRecords() as $rec) {
+    $classMod = $rec['PriceModifier'];
+    if (!is_float($classMod)) {
+        // Work around db2 reader type detection bug.
+        switch ($classMod) {
+            case 8388608:
+                $classMod = 0.25;
+                break;
+            case 5033165:
+                $classMod = 0.20;
+                break;
+            default:
+                throw new Exception("Unknown class mod: {$classMod}");
+        }
+    }
+    $classPriceMods[$rec['ClassID']] = $classMod;
+}
+unset($itemClassReader);
+$priceArmorReader = getReader('ImportPriceArmor');
+$priceArmorReader->fetchColumnNames();
+$priceShieldReader = getReader('ImportPriceShield');
+$priceShieldReader->fetchColumnNames();
+$priceWeaponReader = getReader('ImportPriceWeapon');
+$priceWeaponReader->fetchColumnNames();
 
 $appearanceToIcon = [];
 $appearanceToDisplay = [];
@@ -147,7 +212,7 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         'icon' => $getIcon($itemIcons[$id] ?? $itemRec['IconFileDataID']),
         'quality' => $sparseRec['OverallQualityID'],
         //'vendorBuy' => $sparseRec['BuyPrice'],
-        //'vendorSell' => $sparseRec['SellPrice'],
+        'vendorSell' => $sparseRec['SellPrice'],
     ];
     if ($sparseRec['Flags'][1] & FLAGS_1_HORDE) {
         $items[$id]['side'] = SIDE_HORDE;
@@ -182,8 +247,142 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
             $items[$id]['itemLevel'] = $sparseRec['ItemLevel'];
             break;
     }
+
+    // Pricing
+    $priceBaseType = null;
+    $invType = $itemRec['InventoryType'];
+    switch ($itemRec['ClassID']) {
+        case CLASS_ARMOR:
+            $priceBaseType = CLASS_ARMOR;
+            break;
+        case CLASS_WEAPON:
+            $priceBaseType = CLASS_WEAPON;
+            break;
+        case CLASS_GEM:
+            if ($itemRec['SubclassID'] === SUBCLASS_GEM_RELIC) {
+                $priceBaseType = CLASS_WEAPON;
+                $invType = INV_TYPE_ONE_HAND;
+            }
+            break;
+    }
+    if ($sparseRec['Flags'][2] & FLAGS_2_OVERRIDE_GOLD_COST) {
+        $priceBaseType = null;
+    }
+    if (!is_null($priceBaseType)) {
+        $priceMod = 0;
+        $weaponType = null;
+        switch ($invType) {
+            case INV_TYPE_HEAD:
+            case INV_TYPE_NECK:
+            case INV_TYPE_SHOULDERS:
+            case INV_TYPE_CHEST:
+            case INV_TYPE_WAIST:
+            case INV_TYPE_LEGS:
+            case INV_TYPE_FEET:
+            case INV_TYPE_WRISTS:
+            case INV_TYPE_HANDS:
+            case INV_TYPE_FINGER:
+            case INV_TYPE_TRINKET:
+            case INV_TYPE_BACK:
+            case INV_TYPE_ROBE:
+            case INV_TYPE_HELD_IN_OFF_HAND:
+                $row = $priceArmorReader->getRecord($invType) ?? [];
+                switch ($itemRec['SubclassID']) {
+                    case SUBCLASS_ARMOR_PLATE:
+                        $priceMod = $row['PlateModifier'] ?? 0;
+                        break;
+                    case SUBCLASS_ARMOR_MAIL:
+                        $priceMod = $row['ChainModifier'] ?? 0;
+                        break;
+                    case SUBCLASS_ARMOR_LEATHER:
+                        $priceMod = $row['LeatherModifier'] ?? 0;
+                        break;
+                    case SUBCLASS_ARMOR_CLOTH:
+                    default:
+                        $priceMod = $row['ClothModifier'] ?? 0;
+                        break;
+                }
+                break;
+            case INV_TYPE_MAIN_HAND:
+                $weaponType = 1;
+                break;
+            case INV_TYPE_OFF_HAND:
+                $weaponType = 2;
+                break;
+            case INV_TYPE_ONE_HAND:
+                $weaponType = 3;
+                break;
+            case INV_TYPE_TWO_HAND:
+                $weaponType = 4;
+                break;
+            case INV_TYPE_RANGED:
+            case INV_TYPE_RANGED_RIGHT:
+            case INV_TYPE_RELIC:
+                $weaponType = 5;
+                break;
+            case INV_TYPE_SHIELD:
+                $priceMod = ($priceShieldReader->getRecord(2) ?? [])['Data'] ?? 0;
+                break;
+        }
+        if (!is_null($weaponType)) {
+            $priceMod = ($priceWeaponReader->getRecord($weaponType) ?? [])['Data'] ?? 0;
+        }
+
+        $classMod = $classPriceMods[$itemRec['ClassID']] ?? 0;
+        if ($itemRec['ClassID'] === CLASS_GEM) {
+            // Artifact relic adjustment.
+            $classMod *= 0.333333;
+        }
+
+        $fudge = 0.99999875;
+
+        unset($items[$id]['vendorSell']);
+        $items[$id]['vendorSellFactor'] = array_product([
+            $priceMod,
+            $classMod,
+            $sparseRec['PriceVariance'],
+            $sparseRec['PriceRandomValue'],
+            $fudge,
+        ]);
+        if ($priceBaseType !== $items[$id]['class']) {
+            $items[$id]['vendorSellBase'] = $priceBaseType;
+        }
+    }
 }
 echo "Finished saving {$saved} items.\n";
 
 file_put_contents("{$outPath}/items.json", json_encode($items, JSON_UNESCAPED_SLASHES));
 file_put_contents("{$outPath}/names.enus.json", json_encode($names, JSON_UNESCAPED_SLASHES));
+
+unset($items, $names, $fileListReader, $itemSparseReader, $itemReader, $priceArmorReader, $priceShieldReader, $priceWeaponReader);
+
+$vendorSellData = [
+    'quality' => [],
+    CLASS_ARMOR => [
+        0 => 0,
+    ],
+    CLASS_WEAPON => [
+        0 => 0,
+    ],
+];
+echo "Opening client-side price readers...\n";
+$priceQualityReader = getReader('ImportPriceQuality');
+$priceQualityReader->fetchColumnNames();
+foreach ($priceQualityReader->generateRecords() as $id => $rec) {
+    $vendorSellData['quality'][$id - 1] = $rec['Data'];
+}
+unset($priceQualityReader);
+
+$priceBaseReader = getReader('ItemPriceBase');
+$priceBaseReader->fetchColumnNames();
+foreach ($priceBaseReader->generateRecords() as $rec) {
+    $vendorSellData[CLASS_ARMOR][$rec['ItemLevel']] = $rec['Armor'];
+    $vendorSellData[CLASS_WEAPON][$rec['ItemLevel']] = $rec['Weapon'];
+}
+unset($priceBaseReader);
+foreach ($vendorSellData as $k => &$values) {
+    ksort($values);
+}
+unset($values);
+
+file_put_contents("{$outPath}/vendor.json", json_encode($vendorSellData, JSON_UNESCAPED_SLASHES));
