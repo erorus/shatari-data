@@ -21,6 +21,8 @@ define('BOND_WHEN_PICKED_UP', 1);
 define('BOND_QUEST', 4);
 define('BOND_QUEST_2', 5);
 
+define('DEFAULT_EXPANSION', 9);
+
 define('FLAGS_0_CONJURED', 0x2);
 define('FLAGS_1_HORDE', 0x1);
 define('FLAGS_1_ALLIANCE', 0x2);
@@ -146,6 +148,7 @@ foreach ($itemModifiedAppearanceReader->generateRecords() as $rec) {
 unset($itemModifiedAppearanceReader, $appearanceToIcon, $appearanceToDisplay);
 echo sprintf("Found %d icon associations, %d displays for items.\n", count($itemIcons), count($itemDisplays));
 
+$itemExpansions = json_decode(file_get_contents(__DIR__ . '/../expansion-items.json'), true);
 
 $items = [];
 $names = [];
@@ -213,6 +216,7 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         'quality' => $sparseRec['OverallQualityID'],
         //'vendorBuy' => $sparseRec['BuyPrice'],
         'vendorSell' => $sparseRec['SellPrice'],
+        'expansion' => $itemExpansions[$id] ?? DEFAULT_EXPANSION,
     ];
     if ($sparseRec['Flags'][1] & FLAGS_1_HORDE) {
         $items[$id]['side'] = SIDE_HORDE;
