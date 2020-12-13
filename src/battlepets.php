@@ -7,6 +7,8 @@ use Erorus\DB2\HotfixedReader;
 
 $outPath = __DIR__ . '/../out';
 
+define('DEFAULT_EXPANSION', 9);
+
 define('FLAG_UNTRADEABLE',   0x010);
 define('FLAG_UNTAMEABLE',    0x020);
 define('FLAG_HORDE_ONLY',    0x100);
@@ -48,6 +50,8 @@ $getIcon = function (int $id) use ($fileListReader): string {
     return $cache[$id] = preg_replace('/\.blp$/', '', strtolower(str_replace(' ', '-', $rec['FileName'] ?? '')));
 };
 
+$petExpansions = json_decode(file_get_contents(__DIR__ . '/../expansion-pets.json'), true);
+
 echo "Reading species...\n";
 
 $pets = [];
@@ -69,6 +73,7 @@ foreach ($speciesReader->generateRecords() as $id => $rec) {
         'icon' => $getIcon($rec['IconFileDataID']),
         'type' => $rec['PetTypeEnum'] + 1,
         'display' => $npc['DisplayID'][0],
+        'expansion' => $petExpansions[$id] ?? DEFAULT_EXPANSION,
         'power' => 8,
         'stamina' => 8,
         'speed' => 8,
