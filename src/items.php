@@ -149,6 +149,7 @@ unset($itemModifiedAppearanceReader, $appearanceToIcon, $appearanceToDisplay);
 echo sprintf("Found %d icon associations, %d displays for items.\n", count($itemIcons), count($itemDisplays));
 
 $itemExpansions = json_decode(file_get_contents(__DIR__ . '/../expansion-items.json'), true);
+$vendorItems = json_decode(file_get_contents(__DIR__ . '/../vendor-items.json'), true);
 
 $items = [];
 $names = [];
@@ -218,6 +219,9 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         'vendorSell' => $sparseRec['SellPrice'],
         'expansion' => $itemExpansions[$id] ?? DEFAULT_EXPANSION,
     ];
+    if (isset($vendorItems[$id]['price'])) {
+        $items[$id]['vendorBuy'] = $vendorItems[$id]['price'];
+    }
     if ($sparseRec['Flags'][1] & FLAGS_1_HORDE) {
         $items[$id]['side'] = SIDE_HORDE;
     }
