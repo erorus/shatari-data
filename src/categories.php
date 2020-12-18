@@ -21,6 +21,7 @@ define('CLASS_QUESTITEM', 12);
 define('CLASS_MISCELLANEOUS', 15);
 define('CLASS_GLYPH', 16);
 define('CLASS_BATTLE_PET', 17);
+define('CLASS_WOW_TOKEN', 18);
 
 define('SUBCLASS_WEAPON_AXE1H', 0);
 define('SUBCLASS_WEAPON_AXE2H', 1);
@@ -398,6 +399,11 @@ $result[] = [
         $makeSubclassCategory(CLASS_MISCELLANEOUS, SUBCLASS_MISCELLANEOUS_MOUNT),
         $makeSubclassCategory(CLASS_MISCELLANEOUS, SUBCLASS_MISCELLANEOUS_MOUNT_EQUIPMENT),
     ],
+];
+
+$result[] = [
+    'name' => $globalStrings['TOKEN_FILTER_LABEL'],
+    'class' => CLASS_WOW_TOKEN,
 ];
 
 foreach ($result as &$cat) {
