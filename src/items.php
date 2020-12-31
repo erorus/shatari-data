@@ -70,6 +70,8 @@ define('FORBIDDEN_CLASSES', [
     CLASS_WOW_TOKEN,
 ]);
 
+define('EXCLUDED_VENDOR_NPCS', [111838, 123124]);
+
 function getReader(string $db2Name) {
     $db2Path = __DIR__ . '/../DBFilesClient';
 
@@ -219,7 +221,7 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         'vendorSell' => $sparseRec['SellPrice'],
         'expansion' => $itemExpansions[$id] ?? DEFAULT_EXPANSION,
     ];
-    if (isset($vendorItems[$id]['price'])) {
+    if (isset($vendorItems[$id]['price']) && !in_array($vendorItems[$id]['npc'] ?? 0, EXCLUDED_VENDOR_NPCS)) {
         $items[$id]['vendorBuy'] = $vendorItems[$id]['price'];
     }
     if ($sparseRec['Flags'][1] & FLAGS_1_HORDE) {
