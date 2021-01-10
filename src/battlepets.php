@@ -1,9 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
-use Erorus\DB2\Reader;
-use Erorus\DB2\HotfixedReader;
+require_once __DIR__ . '/incl.php';
 
 $outPath = __DIR__ . '/../out';
 
@@ -13,20 +10,6 @@ define('FLAG_UNTRADEABLE',   0x010);
 define('FLAG_UNTAMEABLE',    0x020);
 define('FLAG_HORDE_ONLY',    0x100);
 define('FLAG_ALLIANCE_ONLY', 0x200);
-
-define('SIDE_HORDE', 2);
-define('SIDE_ALLIANCE', 1);
-
-function getReader(string $db2Name) {
-    $db2Path = __DIR__ . '/../DBFilesClient';
-
-    $hotfixPath = "{$db2Path}/DBCache.bin";
-    $hotfixPath = file_exists($hotfixPath) ? $hotfixPath : null;
-
-    return $hotfixPath ?
-        new HotfixedReader("{$db2Path}/{$db2Name}.db2", $hotfixPath) :
-        new Reader("{$db2Path}/{$db2Name}.db2");
-}
 
 echo "Opening Creature reader...\n";
 $creatureReader = getReader('Creature');
@@ -113,5 +96,23 @@ foreach ($speciesStateReader->generateRecords() as $rec) {
     }
 }
 
-file_put_contents("{$outPath}/battlepets.json", json_encode($pets, JSON_UNESCAPED_SLASHES));
-file_put_contents("{$outPath}/battlepets.enus.json", json_encode($names, JSON_UNESCAPED_SLASHES));
+file_put_contents("{$outPath}/battlepets.json", json_encode($pets, OE_JSON_FLAGS));
+file_put_contents("{$outPath}/battlepets.enus.json", json_encode($names, OE_JSON_FLAGS));
+
+unset($speciesStateReader);
+
+foreach (LOCALES_OTHER as $locale) {
+    echo "Opening {$locale} Creatures...\n";
+    $creatureReader = getReader('Creature', $locale);
+    $creatureReader->fetchColumnNames();
+
+    $localizedNames = [];
+    foreach ($pets as $id => $pet) {
+        $npc = $creatureReader->getRecord($pet['npc']);
+        $localizedNames[$id] = $npc['Name_lang'] ?? $names[$id];
+    }
+
+    file_put_contents("{$outPath}/battlepets.{$locale}.json", json_encode($localizedNames, OE_JSON_FLAGS));
+}
+
+echo "Done.\n";

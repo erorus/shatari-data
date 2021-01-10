@@ -1,0 +1,5 @@
+841631 DBFilesClient/Creature.db2
+1394440 DBFilesClient/GlobalStrings.db2
+1332559 DBFilesClient/ItemNameDescription.db2
+1261604 DBFilesClient/ItemSubClass.db2
+1572924 DBFilesClient/ItemSparse.db2

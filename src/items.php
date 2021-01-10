@@ -1,21 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
-use Erorus\DB2\Reader;
-use Erorus\DB2\HotfixedReader;
+require_once __DIR__ . '/incl.php';
 
 $outPath = __DIR__ . '/../out';
-
-define('CLASS_CONSUMABLE', 0);
-define('CLASS_CONTAINER', 1);
-define('CLASS_WEAPON', 2);
-define('CLASS_GEM', 3);
-define('CLASS_ARMOR', 4);
-define('CLASS_ITEM_ENHANCEMENT', 8);
-define('CLASS_RECIPE', 9);
-define('CLASS_BATTLE_PET', 17);
-define('CLASS_WOW_TOKEN', 18);
 
 define('BOND_WHEN_PICKED_UP', 1);
 define('BOND_QUEST', 4);
@@ -28,42 +15,6 @@ define('FLAGS_1_HORDE', 0x1);
 define('FLAGS_1_ALLIANCE', 0x2);
 define('FLAGS_1_OVERRIDE_GOLD_COST', 0x4000);
 
-define('INV_TYPE_HEAD', 1);
-define('INV_TYPE_NECK', 2);
-define('INV_TYPE_SHOULDERS', 3);
-define('INV_TYPE_SHIRT', 4);
-define('INV_TYPE_CHEST', 5);
-define('INV_TYPE_WAIST', 6);
-define('INV_TYPE_LEGS', 7);
-define('INV_TYPE_FEET', 8);
-define('INV_TYPE_WRISTS', 9);
-define('INV_TYPE_HANDS', 10);
-define('INV_TYPE_FINGER', 11);
-define('INV_TYPE_TRINKET', 12);
-define('INV_TYPE_ONE_HAND', 13);
-define('INV_TYPE_SHIELD', 14);
-define('INV_TYPE_RANGED', 15);
-define('INV_TYPE_BACK', 16);
-define('INV_TYPE_TWO_HAND', 17);
-define('INV_TYPE_BAG', 18);
-define('INV_TYPE_TABARD', 19);
-define('INV_TYPE_ROBE', 20);
-define('INV_TYPE_MAIN_HAND', 21);
-define('INV_TYPE_OFF_HAND', 22);
-define('INV_TYPE_HELD_IN_OFF_HAND', 23);
-define('INV_TYPE_PROJECTILE', 24);
-define('INV_TYPE_THROWN', 25);
-define('INV_TYPE_RANGED_RIGHT', 26);
-define('INV_TYPE_QUIVER', 27);
-define('INV_TYPE_RELIC', 28);
-
-define('SIDE_HORDE', 2);
-define('SIDE_ALLIANCE', 1);
-
-define('SUBCLASS_ARMOR_CLOTH', 1);
-define('SUBCLASS_ARMOR_LEATHER', 2);
-define('SUBCLASS_ARMOR_MAIL', 3);
-define('SUBCLASS_ARMOR_PLATE', 4);
 define('SUBCLASS_GEM_RELIC', 11);
 
 define('FORBIDDEN_CLASSES', [
@@ -71,17 +22,6 @@ define('FORBIDDEN_CLASSES', [
 ]);
 
 define('EXCLUDED_VENDOR_NPCS', [111838, 123124]);
-
-function getReader(string $db2Name) {
-    $db2Path = __DIR__ . '/../DBFilesClient';
-
-    $hotfixPath = "{$db2Path}/DBCache.bin";
-    $hotfixPath = file_exists($hotfixPath) ? $hotfixPath : null;
-
-    return $hotfixPath ?
-        new HotfixedReader("{$db2Path}/{$db2Name}.db2", $hotfixPath) :
-        new Reader("{$db2Path}/{$db2Name}.db2");
-}
 
 echo "Opening import price readers...\n";
 $itemClassReader = getReader('ItemClass');
@@ -293,9 +233,9 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
             case INV_TYPE_HANDS:
             case INV_TYPE_FINGER:
             case INV_TYPE_TRINKET:
-            case INV_TYPE_BACK:
+            case INV_TYPE_CLOAK:
             case INV_TYPE_ROBE:
-            case INV_TYPE_HELD_IN_OFF_HAND:
+            case INV_TYPE_HOLDABLE:
                 $row = $priceArmorReader->getRecord($invType) ?? [];
                 switch ($itemRec['SubclassID']) {
                     case SUBCLASS_ARMOR_PLATE:

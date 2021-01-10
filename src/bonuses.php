@@ -1,22 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
-use Erorus\DB2\Reader;
-use Erorus\DB2\HotfixedReader;
+require_once __DIR__ . '/incl.php';
 
 $outPath = __DIR__ . '/../out';
-
-function getReader(string $db2Name) {
-    $db2Path = __DIR__ . '/../DBFilesClient';
-
-    $hotfixPath = "{$db2Path}/DBCache.bin";
-    $hotfixPath = file_exists($hotfixPath) ? $hotfixPath : null;
-
-    return $hotfixPath ?
-        new HotfixedReader("{$db2Path}/{$db2Name}.db2", $hotfixPath) :
-        new Reader("{$db2Path}/{$db2Name}.db2");
-}
 
 echo "Opening Bonus reader...\n";
 $bonusReader = getReader('ItemBonus');
@@ -113,5 +99,5 @@ file_put_contents("{$outPath}/bonuses.json", json_encode([
     'curves' => $bonusCurves,
     'names' => $bonusNames,
     'curvePoints' => $curvePoints,
-], JSON_UNESCAPED_SLASHES));
-file_put_contents("{$outPath}/name-suffixes.enus.json", json_encode($nameSuffixes, JSON_UNESCAPED_SLASHES));
+], OE_JSON_FLAGS));
+file_put_contents("{$outPath}/name-suffixes.enus.json", json_encode($nameSuffixes, OE_JSON_FLAGS));

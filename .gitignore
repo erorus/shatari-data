@@ -1,4 +1,5 @@
 .idea/
-DBFilesClient/
+current
+versions/
 out/
 vendor/
