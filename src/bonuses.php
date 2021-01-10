@@ -61,19 +61,23 @@ unset($bonuses);
 $nameToBonus = array_filter($nameToBonus);
 unset($excludeNameBonus);
 
-echo "Opening Name reader...\n";
-$nameReader = getReader('ItemNameDescription');
-$nameReader->fetchColumnNames();
-$nameSuffixes = [];
-foreach (array_keys($seenNames) as $nameId) {
-    $nameRow = $nameReader->getRecord($nameId);
-    if (!isset($nameRow)) {
-        echo "Could not get name {$nameId}\n";
-        continue;
+foreach (LOCALES as $locale) {
+    echo "Opening {$locale} Name reader...\n";
+    $nameReader = getReader('ItemNameDescription', $locale);
+    $nameReader->fetchColumnNames();
+    $nameSuffixes = [];
+    foreach (array_keys($seenNames) as $nameId) {
+        $nameRow = $nameReader->getRecord($nameId);
+        if (!isset($nameRow)) {
+            echo "Could not get name {$nameId}\n";
+            continue;
+        }
+        $nameSuffixes[$nameId] = ['name' => $nameRow['Description_lang'], 'bonus' => $nameToBonus[$nameId] ?? null];
     }
-    $nameSuffixes[$nameId] = ['name' => $nameRow['Description_lang'], 'bonus' => $nameToBonus[$nameId] ?? null];
+    unset($nameReader);
+    file_put_contents("{$outPath}/name-suffixes.{$locale}.json", json_encode($nameSuffixes, OE_JSON_FLAGS));
 }
-unset($nameReader, $seenNames);
+unset($seenNames, $nameSuffixes);
 
 echo "Opening Curve reader...\n";
 $curveReader = getReader('CurvePoint');
@@ -100,4 +104,3 @@ file_put_contents("{$outPath}/bonuses.json", json_encode([
     'names' => $bonusNames,
     'curvePoints' => $curvePoints,
 ], OE_JSON_FLAGS));
-file_put_contents("{$outPath}/name-suffixes.enus.json", json_encode($nameSuffixes, OE_JSON_FLAGS));
