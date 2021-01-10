@@ -301,10 +301,25 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
 }
 echo "Finished saving {$saved} items.\n";
 
-file_put_contents("{$outPath}/items.json", json_encode($items, JSON_UNESCAPED_SLASHES));
-file_put_contents("{$outPath}/names.enus.json", json_encode($names, JSON_UNESCAPED_SLASHES));
+file_put_contents("{$outPath}/items.json", json_encode($items, OE_JSON_FLAGS));
+file_put_contents("{$outPath}/names.enus.json", json_encode($names, OE_JSON_FLAGS));
 
-unset($items, $names, $fileListReader, $itemSparseReader, $itemReader, $priceArmorReader, $priceShieldReader, $priceWeaponReader);
+unset($items, $fileListReader, $itemSparseReader, $itemReader, $priceArmorReader, $priceShieldReader, $priceWeaponReader);
+
+foreach (LOCALES_OTHER as $locale) {
+    echo "Opening {$locale} ItemSparse reader...\n";
+    $itemSparseReader = getReader('ItemSparse', $locale);
+    $itemSparseReader->fetchColumnNames();
+
+    $localizedNames = [];
+    foreach ($names as $id => $origName) {
+        $sparseRec = $itemSparseReader->getRecord($id);
+        $localizedNames[$id] = $sparseRec['Display_lang'] ?? $origName;
+    }
+
+    file_put_contents("{$outPath}/names.{$locale}.json", json_encode($localizedNames, OE_JSON_FLAGS));
+}
+unset($names, $localizedNames, $itemSparseReader);
 
 $vendorSellData = [
     'quality' => [],
@@ -335,4 +350,4 @@ foreach ($vendorSellData as $k => &$values) {
 }
 unset($values);
 
-file_put_contents("{$outPath}/vendor.json", json_encode($vendorSellData, JSON_UNESCAPED_SLASHES));
+file_put_contents("{$outPath}/vendor.json", json_encode($vendorSellData, OE_JSON_FLAGS));
