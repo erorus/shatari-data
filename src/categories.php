@@ -3,6 +3,7 @@
 require_once __DIR__ . '/incl.php';
 
 $outPath = __DIR__ . '/../out';
+$locale = $argv[1] ?? 'enus';
 
 define('HIDE_SUBCLASS_AUCTION', 0x2);
 
@@ -54,7 +55,7 @@ define('INV_TYPE_NAMES', [
 $result = [];
 
 echo "Opening Global Strings reader...\n";
-$globalStringsReader = getReader("GlobalStrings");
+$globalStringsReader = getReader("GlobalStrings", $locale);
 $globalStringsReader->fetchColumnNames();
 $globalStrings = [];
 foreach ($globalStringsReader->generateRecords() as $rec) {
@@ -63,7 +64,7 @@ foreach ($globalStringsReader->generateRecords() as $rec) {
 unset($globalStringsReader);
 
 echo "Opening subclass reader...\n";
-$subClassReader = getReader("ItemSubClass");
+$subClassReader = getReader("ItemSubClass", $locale);
 $subClassReader->fetchColumnNames();
 $getSubclassCategories = function (int $classId) use ($subClassReader): array {
     // Some weirdness in the lua.
@@ -371,4 +372,4 @@ foreach ($result as &$cat) {
 }
 unset($cat);
 
-file_put_contents("{$outPath}/categories.enus.json", json_encode($result, JSON_UNESCAPED_SLASHES));
+file_put_contents("{$outPath}/categories.{$locale}.json", json_encode($result, OE_JSON_FLAGS));
