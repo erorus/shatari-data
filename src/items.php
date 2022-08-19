@@ -161,6 +161,9 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         'vendorSell' => $sparseRec['SellPrice'],
         'expansion' => $itemExpansions[$id] ?? DEFAULT_EXPANSION,
     ];
+    if ($sparseRec['Stackable'] > 1) {
+        $items[$id]['stack'] = $sparseRec['Stackable'];
+    }
     if (isset($vendorItems[$id]['price']) && !in_array($vendorItems[$id]['npc'] ?? 0, EXCLUDED_VENDOR_NPCS)) {
         $items[$id]['vendorBuy'] = $vendorItems[$id]['price'];
     }
