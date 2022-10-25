@@ -362,6 +362,9 @@ $profEquipCategory = [
     'class' => CLASS_PROFESSION,
     'subcategories' => $getSubclassCategories(CLASS_PROFESSION),
 ];
+$profEquipCategory['subcategories'] = array_values(array_filter($profEquipCategory['subcategories'], function ($subCat) {
+    return $subCat['subClass'] !== SUBCLASS_PROFESSION_ARCHAEOLOGY;
+}));
 foreach ($profEquipCategory['subcategories'] as &$subcategory) {
     $subcategory['subcategories'][] = [
         'name' => $globalStrings['AUCTION_SUBCATEGORY_PROFESSION_TOOLS'],
