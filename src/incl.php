@@ -40,6 +40,8 @@ define('INV_TYPE_THROWN', 25);
 define('INV_TYPE_RANGED_RIGHT', 26);
 define('INV_TYPE_QUIVER', 27);
 define('INV_TYPE_RELIC', 28);
+define('INV_TYPE_PROFESSION_TOOL', 29);
+define('INV_TYPE_PROFESSION_GEAR', 30);
 
 define('CLASS_CONSUMABLE', 0);
 define('CLASS_CONTAINER', 1);
@@ -54,6 +56,7 @@ define('CLASS_MISCELLANEOUS', 15);
 define('CLASS_GLYPH', 16);
 define('CLASS_BATTLE_PET', 17);
 define('CLASS_WOW_TOKEN', 18);
+define('CLASS_PROFESSION', 19);
 
 define('SUBCLASS_ARMOR_GENERIC', 0);
 define('SUBCLASS_ARMOR_CLOTH', 1);

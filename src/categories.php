@@ -35,6 +35,21 @@ define('SUBCLASS_MISCELLANEOUS_OTHER', 4);
 define('SUBCLASS_MISCELLANEOUS_MOUNT', 5);
 define('SUBCLASS_MISCELLANEOUS_MOUNT_EQUIPMENT', 6);
 
+define('SUBCLASS_PROFESSION_BLACKSMITHING', 0);
+define('SUBCLASS_PROFESSION_LEATHERWORKING', 1);
+define('SUBCLASS_PROFESSION_ALCHEMY', 2);
+define('SUBCLASS_PROFESSION_HERBALISM', 3);
+define('SUBCLASS_PROFESSION_COOKING', 4);
+define('SUBCLASS_PROFESSION_MINING', 5);
+define('SUBCLASS_PROFESSION_TAILORING', 6);
+define('SUBCLASS_PROFESSION_ENGINEERING', 7);
+define('SUBCLASS_PROFESSION_ENCHANTING', 8);
+define('SUBCLASS_PROFESSION_FISHING', 9);
+define('SUBCLASS_PROFESSION_SKINNING', 10);
+define('SUBCLASS_PROFESSION_JEWELCRAFTING', 11);
+define('SUBCLASS_PROFESSION_INSCRIPTION', 12);
+define('SUBCLASS_PROFESSION_ARCHAEOLOGY', 13);
+
 define('INV_TYPE_NAMES', [
     INV_TYPE_HEAD => 'INVTYPE_HEAD',
     INV_TYPE_NECK => 'INVTYPE_NECK',
@@ -68,7 +83,24 @@ $subClassReader = getReader("ItemSubClass", $locale);
 $subClassReader->fetchColumnNames();
 $getSubclassCategories = function (int $classId) use ($subClassReader): array {
     // Some weirdness in the lua.
-    $sortOrderOverride = [CLASS_RECIPE => [SUBCLASS_RECIPE_BOOK => 100]];
+    $sortOrderOverride = [
+        CLASS_RECIPE => [SUBCLASS_RECIPE_BOOK => 100],
+        CLASS_PROFESSION => [
+            SUBCLASS_PROFESSION_INSCRIPTION    => 0,
+            SUBCLASS_PROFESSION_TAILORING      => 1,
+            SUBCLASS_PROFESSION_LEATHERWORKING => 2,
+            SUBCLASS_PROFESSION_JEWELCRAFTING  => 3,
+            SUBCLASS_PROFESSION_ALCHEMY        => 4,
+            SUBCLASS_PROFESSION_BLACKSMITHING  => 5,
+            SUBCLASS_PROFESSION_ENGINEERING    => 6,
+            SUBCLASS_PROFESSION_ENCHANTING     => 7,
+            SUBCLASS_PROFESSION_MINING         => 8,
+            SUBCLASS_PROFESSION_HERBALISM      => 9,
+            SUBCLASS_PROFESSION_SKINNING       => 10,
+            SUBCLASS_PROFESSION_COOKING        => 11,
+            SUBCLASS_PROFESSION_FISHING        => 12,
+        ],
+    ];
 
     $result = [];
     foreach ($subClassReader->generateRecords() as $rec) {
@@ -319,6 +351,33 @@ $result[] = [
     'class' => CLASS_RECIPE,
     'subcategories' => $getSubclassCategories(CLASS_RECIPE),
 ];
+
+// Profession Equipment
+$profEquipCategory = [
+    'name' => $globalStrings['AUCTION_CATEGORY_PROFESSION_EQUIPMENT'],
+    'detailColumn' => [
+        'prop' => 'itemLevel',
+        'name' => $globalStrings['ITEM_LEVEL_ABBR'],
+    ],
+    'class' => CLASS_PROFESSION,
+    'subcategories' => $getSubclassCategories(CLASS_PROFESSION),
+];
+foreach ($profEquipCategory['subcategories'] as &$subcategory) {
+    $subcategory['subcategories'][] = [
+        'name' => $globalStrings['AUCTION_SUBCATEGORY_PROFESSION_TOOLS'],
+        'class' => CLASS_PROFESSION,
+        'subClass' => $subcategory['subClass'],
+        'invTypes' => [INV_TYPE_PROFESSION_TOOL],
+    ];
+    $subcategory['subcategories'][] = [
+        'name' => $globalStrings['AUCTION_SUBCATEGORY_PROFESSION_ACCESSORIES'],
+        'class' => CLASS_PROFESSION,
+        'subClass' => $subcategory['subClass'],
+        'invTypes' => [INV_TYPE_PROFESSION_GEAR],
+    ];
+}
+unset($subcategory);
+$result[] = $profEquipCategory;
 
 // Battle Pets
 $battlePetCategory = [
