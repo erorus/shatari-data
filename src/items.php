@@ -187,6 +187,10 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         case CLASS_RECIPE:
             $items[$id]['skill'] = $sparseRec['RequiredSkillRank'];
             break;
+        case CLASS_PROFESSION:
+            $items[$id]['inventoryType'] = $itemRec['InventoryType'];
+            $items[$id]['itemLevel'] = $sparseRec['ItemLevel'];
+            break;
         case CLASS_ARMOR:
             $items[$id]['inventoryType'] = $itemRec['InventoryType'];
             // no break
@@ -197,7 +201,6 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
             // no break
         case CLASS_GEM:
         case CLASS_ITEM_ENHANCEMENT:
-        case CLASS_PROFESSION:
             $items[$id]['itemLevel'] = $sparseRec['ItemLevel'];
             break;
     }
