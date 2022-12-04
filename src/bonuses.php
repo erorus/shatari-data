@@ -16,6 +16,7 @@ $seenCurves = [];
 $bonusNames = [];
 $bonusCurves = [];
 $bonusLevels = [];
+$bonusSetLevels = [];
 $nameToBonus = [];
 $excludeNameBonus = [];
 
@@ -43,6 +44,10 @@ foreach ($bonusReader->generateRecords() as $rec) {
             list($oldDist, $priority, $contentTuningId, $curveId) = $rec['Value'];
             $seenCurves[$curveId] = true;
             $bonusCurves[$bonusId] = [$priority, $curveId];
+            break;
+        case 42: // Set item level
+            [$level, $priority] = $rec['Value'];
+            $bonusSetLevels[$bonusId] = [$priority, $level];
             break;
     }
 }
@@ -100,6 +105,7 @@ unset($curveReader, $seenCurves);
 
 file_put_contents("{$outPath}/bonuses.json", json_encode([
     'levels' => $bonusLevels,
+    'setLevels' => $bonusSetLevels,
     'curves' => $bonusCurves,
     'names' => $bonusNames,
     'curvePoints' => $curvePoints,
