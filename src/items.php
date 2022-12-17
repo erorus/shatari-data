@@ -93,6 +93,14 @@ echo sprintf("Found %d icon associations, %d displays for items.\n", count($item
 $itemExpansions = json_decode(file_get_contents(__DIR__ . '/../expansion-items.json'), true);
 $vendorItems = json_decode(file_get_contents(__DIR__ . '/../vendor-items.json'), true);
 
+$craftingQualityReader = getReader('CraftingQuality');
+$craftingQualityReader->fetchColumnNames();
+$craftingQualities = [];
+foreach ($craftingQualityReader->generateRecords() as $id => $row) {
+    $craftingQualities[$id] = $row['QualityTier'];
+}
+unset($craftingQualityReader);
+
 $items = [];
 $names = [];
 echo "Opening Item reader...\n";
@@ -172,6 +180,9 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
     }
     if ($sparseRec['Flags'][1] & FLAGS_1_ALLIANCE) {
         $items[$id]['side'] = SIDE_ALLIANCE;
+    }
+    if ($itemRec['CraftingQualityID'] && isset($craftingQualities[$itemRec['CraftingQualityID']])) {
+        $items[$id]['craftingQualityTier'] = $craftingQualities[$itemRec['CraftingQualityID']];
     }
     // Crafted legendaries.
     if ($sparseRec['LimitCategory'] === 473) {
