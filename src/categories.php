@@ -67,6 +67,13 @@ define('INV_TYPE_NAMES', [
     INV_TYPE_HOLDABLE => 'INVTYPE_HOLDABLE',
 ]);
 
+define('TERTIARY_STAT_NAMES', [
+    STAT_SPEED_RATING => 'STAT_SPEED',
+    STAT_LEECH_RATING => 'STAT_LIFESTEAL',
+    STAT_AVOIDANCE_RATING => 'STAT_AVOIDANCE',
+    STAT_INDESTRUCTIBLE_RATING => 'STAT_STURDINESS',
+]);
+
 $result = [];
 
 echo "Opening Global Strings reader...\n";
@@ -254,6 +261,14 @@ foreach ($armorSubclasses as $armorSubclass) {
     ];
     foreach ($inventoryTypes as $inventoryTypeSet) {
         $subcat['subcategories'][] = $makeInvTypeSubCategory($armorSubclass, $inventoryTypeSet);
+    }
+    foreach (TERTIARY_STAT_NAMES as $statId => $statName) {
+        $subcat['subcategories'][] = [
+            'name' => $globalStrings[$statName],
+            'class' => CLASS_ARMOR,
+            'subClass' => $armorSubclass,
+            'bonusStat' => $statId,
+        ];
     }
     $armorCategory['subcategories'][] = $subcat;
 }

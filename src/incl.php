@@ -66,6 +66,11 @@ define('SUBCLASS_ARMOR_PLATE', 4);
 define('SUBCLASS_ARMOR_COSMETIC', 5);
 define('SUBCLASS_ARMOR_SHIELD', 6);
 
+define('STAT_SPEED_RATING', 61);
+define('STAT_LEECH_RATING', 62);
+define('STAT_AVOIDANCE_RATING', 63);
+define('STAT_INDESTRUCTIBLE_RATING', 64);
+
 /**
  * @param string $db2Name
  * @param string $locale

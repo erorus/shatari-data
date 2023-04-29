@@ -11,6 +11,8 @@ $bonusReader->setFieldsSigned([
     array_search('Value', $colNames) => true,
 ]);
 
+$tertiaryStats = [STAT_SPEED_RATING, STAT_LEECH_RATING, STAT_AVOIDANCE_RATING, STAT_INDESTRUCTIBLE_RATING];
+
 $seenNames = [];
 $seenCurves = [];
 $bonusNames = [];
@@ -19,6 +21,7 @@ $bonusLevels = [];
 $bonusSetLevels = [];
 $nameToBonus = [];
 $excludeNameBonus = [];
+$statBonuses = [];
 
 echo "Scanning bonuses...\n";
 foreach ($bonusReader->generateRecords() as $rec) {
@@ -34,6 +37,15 @@ foreach ($bonusReader->generateRecords() as $rec) {
         case 1: // Adjust item level
             $bonusLevels[$bonusId] = $rec['Value'][0];
             break;
+
+        case 2: // Adjust stat
+        case 25: // Crafting stat
+            $statId = $rec['Value'][0];
+            if (in_array($statId, $tertiaryStats, strict: true)) {
+                $statBonuses[$statId][] = $bonusId;
+            }
+            break;
+
         case 5: // Set name suffix
             list($nameId, $priority) = $rec['Value'];
             $seenNames[$nameId] = true;
@@ -53,7 +65,7 @@ foreach ($bonusReader->generateRecords() as $rec) {
 }
 unset($bonusReader);
 
-// Determine bonus IDs which onnly add a name and do nothing else.
+// Determine bonus IDs which only add a name and do nothing else.
 foreach ($nameToBonus as $nameId => &$bonuses) {
     $validBonuses = array_values(array_diff($bonuses, $excludeNameBonus));
     if ($validBonuses) {
@@ -109,4 +121,5 @@ file_put_contents("{$outPath}/bonuses.json", json_encode([
     'curves' => $bonusCurves,
     'names' => $bonusNames,
     'curvePoints' => $curvePoints,
+    'statBonuses' => $statBonuses,
 ], OE_JSON_FLAGS));
