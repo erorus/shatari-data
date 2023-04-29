@@ -1,7 +1,7 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
     "content-hash": "c6c8507fab76c22a454f5fc387aa1a9f",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/erorus/db2.git",
-                "reference": "d303559180e8465a2c6d04fd0bfa0631edd2d0b8"
+                "reference": "31c40e4201414112cac74bd2f74648afe9f60143"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/erorus/db2/zipball/d303559180e8465a2c6d04fd0bfa0631edd2d0b8",
-                "reference": "d303559180e8465a2c6d04fd0bfa0631edd2d0b8",
+                "url": "https://api.github.com/repos/erorus/db2/zipball/31c40e4201414112cac74bd2f74648afe9f60143",
+                "reference": "31c40e4201414112cac74bd2f74648afe9f60143",
                 "shasum": ""
             },
             "require": {
@@ -25,6 +25,7 @@
                 "ext-gmp": "*",
                 "ext-mbstring": "*"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -46,7 +47,7 @@
                 "source": "https://github.com/erorus/db2/tree/master",
                 "issues": "https://github.com/erorus/db2/issues"
             },
-            "time": "2020-12-09T01:30:17+00:00"
+            "time": "2023-03-11T18:17:31+00:00"
         }
     ],
     "packages-dev": [],
@@ -58,5 +59,6 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.2.0"
 }
