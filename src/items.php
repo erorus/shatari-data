@@ -102,7 +102,10 @@ foreach ($craftingQualityReader->generateRecords() as $id => $row) {
 unset($craftingQualityReader);
 
 $items = [];
-$names = [];
+$names = [
+    'bound' => [],
+    'unbound' => [],
+];
 echo "Opening Item reader...\n";
 $itemReader = getReader('Item');
 $itemReader->fetchColumnNames();
@@ -146,8 +149,13 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         continue;
     }
 
+    $bop = false;
     if (in_array($sparseRec['Bonding'], [BOND_WHEN_PICKED_UP, BOND_QUEST, BOND_QUEST_2])) {
-        continue;
+        if (!in_array($itemRec['ClassID'], [CLASS_WEAPON, CLASS_ARMOR, CLASS_PROFESSION])) {
+            continue;
+        }
+
+        $bop = true;
     }
 
     if ($sparseRec['Flags'][0] & FLAGS_0_CONJURED) {
@@ -159,7 +167,6 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
     }
 
     $saved++;
-    $names[$id] = $sparseRec['Display_lang'];
     $items[$id] = [
         'class' => $itemRec['ClassID'],
         'subclass' => $itemRec['SubclassID'],
@@ -169,6 +176,12 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         'vendorSell' => $sparseRec['SellPrice'],
         'expansion' => $itemExpansions[$id] ?? DEFAULT_EXPANSION,
     ];
+    if ($bop) {
+        $items[$id]['bop'] = true;
+        $names['bound'][$id] = $sparseRec['Display_lang'];
+    } else {
+        $names['unbound'][$id] = $sparseRec['Display_lang'];
+    }
     if ($sparseRec['Stackable'] > 1) {
         $items[$id]['stack'] = $sparseRec['Stackable'];
     }
@@ -319,8 +332,13 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
 }
 echo "Finished saving {$saved} items.\n";
 
-file_put_contents("{$outPath}/items.json", json_encode($items, OE_JSON_FLAGS));
-file_put_contents("{$outPath}/names.enus.json", json_encode($names, OE_JSON_FLAGS));
+file_put_contents("{$outPath}/items.all.json", json_encode($items, OE_JSON_FLAGS));
+file_put_contents("{$outPath}/items.unbound.json", json_encode(
+    array_filter($items, static fn ($item) => !($item['bop'] ?? false)),
+    OE_JSON_FLAGS,
+));
+file_put_contents("{$outPath}/names.bound.enus.json", json_encode($names['bound'], OE_JSON_FLAGS));
+file_put_contents("{$outPath}/names.unbound.enus.json", json_encode($names['unbound'], OE_JSON_FLAGS));
 
 unset($items, $fileListReader, $itemSparseReader, $itemReader, $priceArmorReader, $priceShieldReader, $priceWeaponReader);
 
@@ -329,13 +347,21 @@ foreach (LOCALES_OTHER as $locale) {
     $itemSparseReader = getReader('ItemSparse', $locale);
     $itemSparseReader->fetchColumnNames();
 
-    $localizedNames = [];
-    foreach ($names as $id => $origName) {
+    $localizedNames = [
+        'bound' => [],
+        'unbound' => [],
+    ];
+    foreach ($names['bound'] as $id => $origName) {
         $sparseRec = $itemSparseReader->getRecord($id);
-        $localizedNames[$id] = $sparseRec['Display_lang'] ?? $origName;
+        $localizedNames['bound'][$id] = $sparseRec['Display_lang'] ?? $origName;
+    }
+    foreach ($names['unbound'] as $id => $origName) {
+        $sparseRec = $itemSparseReader->getRecord($id);
+        $localizedNames['unbound'][$id] = $sparseRec['Display_lang'] ?? $origName;
     }
 
-    file_put_contents("{$outPath}/names.{$locale}.json", json_encode($localizedNames, OE_JSON_FLAGS));
+    file_put_contents("{$outPath}/names.bound.{$locale}.json", json_encode($localizedNames['bound'], OE_JSON_FLAGS));
+    file_put_contents("{$outPath}/names.unbound.{$locale}.json", json_encode($localizedNames['unbound'], OE_JSON_FLAGS));
 }
 unset($names, $localizedNames, $itemSparseReader);
 
