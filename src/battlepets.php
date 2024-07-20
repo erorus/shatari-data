@@ -4,7 +4,7 @@ require_once __DIR__ . '/incl.php';
 
 $outPath = __DIR__ . '/../out';
 
-define('DEFAULT_EXPANSION', 10);
+define('DEFAULT_EXPANSION', 11);
 
 define('FLAG_UNTRADEABLE',   0x010);
 define('FLAG_UNTAMEABLE',    0x020);

@@ -8,7 +8,7 @@ define('BOND_WHEN_PICKED_UP', 1);
 define('BOND_QUEST', 4);
 define('BOND_QUEST_2', 5);
 
-define('DEFAULT_EXPANSION', 10);
+define('DEFAULT_EXPANSION', 11);
 
 define('FLAGS_0_CONJURED', 0x2);
 define('FLAGS_1_HORDE', 0x1);
