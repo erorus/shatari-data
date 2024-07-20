@@ -83,15 +83,21 @@ foreach ($speciesStateReader->generateRecords() as $rec) {
         continue;
     }
 
+    $value = $rec['Value'];
+    if ($value & 0x80000000) {
+        // Signed. DB2 reader is sketchy with signed cols. :(
+        $value -= 0x100000000;
+    }
+
     switch ($rec['BattlePetStateID']) {
         case 18:
-            $pets[$rec['BattlePetSpeciesID']]['power'] = 8 + $rec['Value'] * 0.005;
+            $pets[$rec['BattlePetSpeciesID']]['power'] = 8 + $value * 0.005;
             break;
         case 19:
-            $pets[$rec['BattlePetSpeciesID']]['stamina'] = 8 + $rec['Value'] * 0.005;
+            $pets[$rec['BattlePetSpeciesID']]['stamina'] = 8 + $value * 0.005;
             break;
         case 20:
-            $pets[$rec['BattlePetSpeciesID']]['speed'] = 8 + $rec['Value'] * 0.005;
+            $pets[$rec['BattlePetSpeciesID']]['speed'] = 8 + $value * 0.005;
             break;
     }
 }
