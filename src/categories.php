@@ -212,6 +212,17 @@ foreach ($weaponsCategory['subcategories'] as &$subcat) {
         }
         $subcat['subcategories'][] = $subSubCat;
     }
+
+    if (!in_array(SUBCLASS_WEAPON_GENERIC, $subcat['subClasses'], strict: true)) {
+        foreach (TERTIARY_STAT_NAMES as $statId => $statName) {
+            $subcat['subcategories'][] = [
+                'name'       => $globalStrings[$statName],
+                'class'      => CLASS_WEAPON,
+                'subClasses' => $subcat['subClasses'],
+                'bonusStat'  => $statId,
+            ];
+        }
+    }
 }
 unset($subcat);
 
@@ -292,6 +303,15 @@ $subcat['subcategories'][] = $makeInvTypeSubCategory(SUBCLASS_ARMOR_GENERIC, [IN
 $subcat['subcategories'][] = $makeSubclassCategory(CLASS_ARMOR, SUBCLASS_ARMOR_SHIELD);
 $subcat['subcategories'][] = $makeInvTypeSubCategory(SUBCLASS_ARMOR_GENERIC, [INV_TYPE_BODY]);
 $subcat['subcategories'][] = $makeInvTypeSubCategory(SUBCLASS_ARMOR_GENERIC, [INV_TYPE_HEAD]);
+foreach (TERTIARY_STAT_NAMES as $statId => $statName) {
+    $subcat['subcategories'][] = [
+        'name' => $globalStrings[$statName],
+        'class' => CLASS_ARMOR,
+        'subClasses' => [SUBCLASS_ARMOR_GENERIC, SUBCLASS_ARMOR_SHIELD],
+        'bonusStat' => $statId,
+    ];
+}
+
 $armorCategory['subcategories'][] = $subcat;
 
 $armorCategory['subcategories'][] = $makeSubclassCategory(CLASS_ARMOR, SUBCLASS_ARMOR_COSMETIC);
