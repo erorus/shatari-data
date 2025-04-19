@@ -123,3 +123,11 @@ file_put_contents("{$outPath}/bonuses.json", json_encode([
     'curvePoints' => $curvePoints,
     'statBonuses' => $statBonuses,
 ], OE_JSON_FLAGS));
+
+$bonusToStats = [];
+foreach ($statBonuses as $statId => $bonuses) {
+    foreach ($bonuses as $bonus) {
+        $bonusToStats[$bonus][] = $statId;
+    }
+}
+file_put_contents("{$outPath}/bonusToStats.json", json_encode($bonusToStats, OE_JSON_FLAGS));
