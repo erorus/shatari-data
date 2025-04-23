@@ -5,8 +5,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Erorus\DB2\Reader;
 use Erorus\DB2\HotfixedReader;
 
-define('LOCALES', ['enus', 'dede', 'eses', 'frfr', 'itit', 'kokr', 'ptbr', 'ruru', 'zhtw']);
-define('LOCALES_OTHER', ['dede', 'eses', 'frfr', 'itit', 'kokr', 'ptbr', 'ruru', 'zhtw']);
+define('LOCALES', ['enus', 'dede', 'eses', 'frfr', 'itit', 'kokr', 'ptbr', 'ruru', 'zhtw', 'esmx']);
+define('LOCALES_OTHER', ['dede', 'eses', 'frfr', 'itit', 'kokr', 'ptbr', 'ruru', 'zhtw', 'esmx']);
 define('OE_JSON_FLAGS', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
 define('SIDE_HORDE', 2);
