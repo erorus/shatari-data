@@ -194,8 +194,9 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
     if ($sparseRec['Flags'][1] & FLAGS_1_ALLIANCE) {
         $items[$id]['side'] = SIDE_ALLIANCE;
     }
-    if ($itemRec['CraftingQualityID'] && isset($craftingQualities[$itemRec['CraftingQualityID']])) {
-        $items[$id]['craftingQualityTier'] = $craftingQualities[$itemRec['CraftingQualityID']];
+    $craftingQualityID = $itemRec['CraftingQualityID'] ?? $itemRec['Field_11_2_7_63642_010'] ?? null;
+    if ($craftingQualityID && isset($craftingQualities[$craftingQualityID])) {
+        $items[$id]['craftingQualityTier'] = $craftingQualities[$craftingQualityID];
     }
     // Crafted legendaries.
     if ($sparseRec['LimitCategory'] === 473) {
