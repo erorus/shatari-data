@@ -14,7 +14,7 @@ fclose($f);
 
 $json = json_decode(file_get_contents($argv[2]), true);
 foreach ($ids as $id) {
-    $json[$id] ??= 10;
+    $json[$id] ??= 11;
 }
 ksort($json, SORT_NUMERIC);
 file_put_contents($argv[2], json_encode($json, JSON_PRETTY_PRINT));
