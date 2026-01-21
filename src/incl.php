@@ -57,6 +57,7 @@ define('CLASS_GLYPH', 16);
 define('CLASS_BATTLE_PET', 17);
 define('CLASS_WOW_TOKEN', 18);
 define('CLASS_PROFESSION', 19);
+define('CLASS_HOUSING', 20);
 
 define('SUBCLASS_ARMOR_GENERIC', 0);
 define('SUBCLASS_ARMOR_CLOTH', 1);

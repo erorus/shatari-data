@@ -50,6 +50,9 @@ define('SUBCLASS_PROFESSION_JEWELCRAFTING', 11);
 define('SUBCLASS_PROFESSION_INSCRIPTION', 12);
 define('SUBCLASS_PROFESSION_ARCHAEOLOGY', 13);
 
+define('SUBCLASS_HOUSING_DECOR', 0);
+define('SUBCLASS_HOUSING_DYE', 1);
+
 define('INV_TYPE_NAMES', [
     INV_TYPE_HEAD => 'INVTYPE_HEAD',
     INV_TYPE_NECK => 'INVTYPE_NECK',
@@ -416,6 +419,16 @@ foreach ($profEquipCategory['subcategories'] as &$subcategory) {
 }
 unset($subcategory);
 $result[] = $profEquipCategory;
+
+// Housing
+$result[] = [
+    'name' => $globalStrings['AUCTION_CATEGORY_HOUSING'],
+    'class' => CLASS_HOUSING,
+    'subcategories' => [
+        $makeSubclassCategory(CLASS_HOUSING, SUBCLASS_HOUSING_DECOR),
+        $makeSubclassCategory(CLASS_HOUSING, SUBCLASS_HOUSING_DYE),
+    ],
+];
 
 // Battle Pets
 $battlePetCategory = [

@@ -125,7 +125,7 @@ $getIcon = function (int $id) use ($fileListReader): string {
 
     $rec = $fileListReader->getRecord($id);
 
-    return $cache[$id] = preg_replace('/\.blp$/', '', strtolower(str_replace(' ', '-', $rec['FileName'] ?? '')));
+    return $cache[$id] = preg_replace('/\.blp$/', '', strtolower(str_replace(' ', '-', $rec['FileName'] ?? $id)));
 };
 
 $itemCount = count($itemReader->getIds());
