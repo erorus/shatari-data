@@ -20,3 +20,4 @@
 1375801 DBFilesClient/ManifestInterfaceData.db2
 7322704 DBFilesClient/ItemOffsetCurve.db2
 7322705 DBFilesClient/ItemScalingConfig.db2
+7322706 DBFilesClient/ItemSquishEra.db2

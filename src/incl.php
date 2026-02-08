@@ -5,6 +5,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use Erorus\DB2\Reader;
 use Erorus\DB2\HotfixedReader;
 
+define('SQUISH_PATCH', 120000);
+
 define('LOCALES', ['enus', 'dede', 'eses', 'frfr', 'itit', 'kokr', 'ptbr', 'ruru', 'zhtw', 'esmx']);
 define('LOCALES_OTHER', ['dede', 'eses', 'frfr', 'itit', 'kokr', 'ptbr', 'ruru', 'zhtw', 'esmx']);
 define('OE_JSON_FLAGS', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -88,4 +90,35 @@ function getReader(string $db2Name, string $locale = 'enus') {
     return $hotfixPath ?
         new HotfixedReader("{$db2Path}/{$db2Name}.db2", $hotfixPath) :
         new Reader("{$db2Path}/{$db2Name}.db2");
+}
+
+/**
+ * Returns the curve ID for level squishes.
+ *
+ * @return int
+ */
+function getSquishCurve() {
+    static $result = null;
+    if ($result !== null) {
+        return $result;
+    }
+
+    $result = 0;
+
+    echo sprintf("Getting item squish curve for patch %d\n", SQUISH_PATCH);
+    $reader = getReader('ItemSquishEra');
+    $reader->fetchColumnNames();
+
+    $bestPatch = null;
+    foreach ($reader->generateRecords() as $rec) {
+        if ($rec['Patch'] > SQUISH_PATCH) {
+            continue;
+        }
+        if ($bestPatch === null || $bestPatch < SQUISH_PATCH) {
+            $bestPatch = $rec['Patch'];
+            $result = $rec['CurveID'];
+        }
+    }
+
+    return $result;
 }

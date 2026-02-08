@@ -35,6 +35,11 @@ $excludeNameBonus = [];
 $statBonuses = [];
 $scalingConfigs = [];
 
+$squishCurve = getSquishCurve();
+if ($squishCurve) {
+    $seenCurves[$squishCurve] = true;
+}
+
 echo "Scanning bonuses...\n";
 foreach ($bonusReader->generateRecords() as $rec) {
     if (!isset($rec['ParentItemBonusListID'])) {
@@ -157,6 +162,7 @@ file_put_contents("{$outPath}/bonuses.json", json_encode([
     'curvePoints' => $curvePoints,
     'statBonuses' => $statBonuses,
     'scalingConfigs' => $scalingConfigs,
+    'squishCurve' => $squishCurve,
 ], OE_JSON_FLAGS));
 
 $bonusToStats = [];

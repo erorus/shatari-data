@@ -23,6 +23,38 @@ define('FORBIDDEN_CLASSES', [
 
 define('EXCLUDED_VENDOR_NPCS', [111838, 123124]);
 
+$squishCurveId = getSquishCurve();
+$squishCurve = [];
+if ($squishCurveId) {
+    echo "Loading squish curve {$squishCurveId}\n";
+    $curvePointReader = getReader('CurvePoint');
+    $curvePointReader->fetchColumnNames();
+    foreach ($curvePointReader->generateRecords() as $rec) {
+        if ($rec['CurveID'] === $squishCurveId) {
+            $squishCurve[] = $rec['Pos'];
+        }
+    }
+    usort($squishCurve, static fn (array $a, array $b) => $a[0] <=> $b[0]);
+    $getSquishedLevel = static function (int $level) use ($squishCurve): int {
+        [$lastX, $lastY] = $squishCurve[0];
+
+        foreach ($squishCurve as [$x, $y]) {
+            if ($level === $x) {
+                return $y;
+            }
+            if ($level < $x) {
+                return round(($y - $lastY) / ($x - $lastX) * ($level - $lastX) + $lastY);
+            }
+            [$lastX, $lastY] = [$x, $y];
+        }
+
+        return $lastY;
+    };
+} else {
+    echo "No squish curve in use!\n";
+    $getSquishedLevel = static fn (int $level) => $level;
+}
+
 echo "Opening import price readers...\n";
 $itemClassReader = getReader('ItemClass');
 $itemClassReader->fetchColumnNames();
@@ -214,7 +246,8 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
             break;
         case CLASS_PROFESSION:
             $items[$id]['inventoryType'] = $itemRec['InventoryType'];
-            $items[$id]['itemLevel'] = $sparseRec['ItemLevel'];
+            $items[$id]['itemLevelRaw'] = $sparseRec['ItemLevel'];
+            $items[$id]['itemLevel'] = $getSquishedLevel($sparseRec['ItemLevel']);
             break;
         case CLASS_ARMOR:
             $items[$id]['inventoryType'] = $itemRec['InventoryType'];
@@ -226,7 +259,8 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
             // no break
         case CLASS_GEM:
         case CLASS_ITEM_ENHANCEMENT:
-            $items[$id]['itemLevel'] = $sparseRec['ItemLevel'];
+            $items[$id]['itemLevelRaw'] = $sparseRec['ItemLevel'];
+            $items[$id]['itemLevel'] = $getSquishedLevel($sparseRec['ItemLevel']);
             break;
     }
 
@@ -335,7 +369,13 @@ echo "Finished saving {$saved} items.\n";
 
 file_put_contents("{$outPath}/items.all.json", json_encode($items, OE_JSON_FLAGS));
 file_put_contents("{$outPath}/items.unbound.json", json_encode(
-    array_filter($items, static fn ($item) => !($item['bop'] ?? false)),
+    array_map(
+        static function ($item) {
+            unset($item['itemLevelRaw']);
+            return $item;
+        },
+        array_filter($items, static fn ($item) => !($item['bop'] ?? false))
+    ),
     OE_JSON_FLAGS,
 ));
 file_put_contents("{$outPath}/names.bound.enus.json", json_encode($names['bound'], OE_JSON_FLAGS));
