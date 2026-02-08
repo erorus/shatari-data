@@ -27,6 +27,7 @@ $tertiaryStats = [STAT_SPEED_RATING, STAT_LEECH_RATING, STAT_AVOIDANCE_RATING, S
 $seenNames = [];
 $seenCurves = [];
 $bonusNames = [];
+$playerLevelCurves = [];
 $bonusCurves = [];
 $bonusLevels = [];
 $bonusSetLevels = [];
@@ -34,6 +35,7 @@ $nameToBonus = [];
 $excludeNameBonus = [];
 $statBonuses = [];
 $scalingConfigs = [];
+$bonusCurveAdjustments = [];
 
 $squishCurve = getSquishCurve();
 if ($squishCurve) {
@@ -69,20 +71,24 @@ foreach ($bonusReader->generateRecords() as $rec) {
             $bonusNames[$bonusId] = [$priority, $nameId];
             $nameToBonus[$nameId][] = $bonusId;
             break;
-        case 13: // Scale item level
+
+        case 13: // Player level curve
             list($oldDist, $priority, $contentTuningId, $curveId) = $rec['Value'];
             $seenCurves[$curveId] = true;
-            $bonusCurves[$bonusId] = [$priority, $curveId];
+            $playerLevelCurves[$bonusId] = [$priority, $curveId];
             break;
+
         case 42: // Set item level
             [$level, $priority] = $rec['Value'];
             $bonusSetLevels[$bonusId] = [$priority, $level];
             break;
-        case 48: // Item level curve points
-            [$curveId, $level] = $rec['Value'];
+
+        case 48: // Item level curve
+            [$curveId, $level, $priority] = $rec['Value'];
             $seenCurves[$curveId] = true;
-            // TODO
+            $bonusCurves[$bonusId] = [$priority, $curveId, $level];
             break;
+
         case 49: // Item scaling config
             [$scalingConfigId] = $rec['Value'];
             if ($configRec = $itemScalingConfigReader->getRecord($scalingConfigId)) {
@@ -98,7 +104,7 @@ foreach ($bonusReader->generateRecords() as $rec) {
             break;
 
         case 53: // Adjust item level curve
-            // TODO
+            $bonusCurveAdjustments[$bonusId] = $rec['Value'][0];
             break;
     }
 }
@@ -157,7 +163,9 @@ unset($curveReader, $seenCurves);
 file_put_contents("{$outPath}/bonuses.json", json_encode([
     'levels' => $bonusLevels,
     'setLevels' => $bonusSetLevels,
-    'curves' => $bonusCurves,
+    'playerLevelCurves' => $playerLevelCurves,
+    'bonusCurves' => $bonusCurves,
+    'bonusCurveAdjustments' => $bonusCurveAdjustments,
     'names' => $bonusNames,
     'curvePoints' => $curvePoints,
     'statBonuses' => $statBonuses,
