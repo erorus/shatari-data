@@ -11,6 +11,17 @@ $bonusReader->setFieldsSigned([
     array_search('Value', $colNames) => true,
 ]);
 
+echo "Opening Item Scaling Config reader...\n";
+$itemScalingConfigReader = getReader('ItemScalingConfig');
+$itemScalingConfigReader->fetchColumnNames();
+
+echo "Opening Item Offset Curve reader...\n";
+$itemOffsetCurveReader = getReader('ItemOffsetCurve');
+$colNames = $itemOffsetCurveReader->fetchColumnNames();
+$bonusReader->setFieldsSigned([
+    array_search('Offset', $colNames) => true,
+]);
+
 $tertiaryStats = [STAT_SPEED_RATING, STAT_LEECH_RATING, STAT_AVOIDANCE_RATING, STAT_INDESTRUCTIBLE_RATING];
 
 $seenNames = [];
@@ -22,6 +33,7 @@ $bonusSetLevels = [];
 $nameToBonus = [];
 $excludeNameBonus = [];
 $statBonuses = [];
+$scalingConfigs = [];
 
 echo "Scanning bonuses...\n";
 foreach ($bonusReader->generateRecords() as $rec) {
@@ -60,6 +72,28 @@ foreach ($bonusReader->generateRecords() as $rec) {
         case 42: // Set item level
             [$level, $priority] = $rec['Value'];
             $bonusSetLevels[$bonusId] = [$priority, $level];
+            break;
+        case 48: // Item level curve points
+            [$curveId, $level] = $rec['Value'];
+            $seenCurves[$curveId] = true;
+            // TODO
+            break;
+        case 49: // Item scaling config
+            [$scalingConfigId] = $rec['Value'];
+            if ($configRec = $itemScalingConfigReader->getRecord($scalingConfigId)) {
+                if ($itemOffsetCurveRec = $itemOffsetCurveReader->getRecord($configRec['ItemOffsetCurveID'])) {
+                    $seenCurves[$itemOffsetCurveRec['CurveID']] = true;
+                    $scalingConfigs[$bonusId] = [
+                        $configRec['ItemLevel'],
+                        $itemOffsetCurveRec['CurveID'],
+                        $itemOffsetCurveRec['Offset'],
+                    ];
+                }
+            }
+            break;
+
+        case 53: // Adjust item level curve
+            // TODO
             break;
     }
 }
@@ -122,6 +156,7 @@ file_put_contents("{$outPath}/bonuses.json", json_encode([
     'names' => $bonusNames,
     'curvePoints' => $curvePoints,
     'statBonuses' => $statBonuses,
+    'scalingConfigs' => $scalingConfigs,
 ], OE_JSON_FLAGS));
 
 $bonusToStats = [];

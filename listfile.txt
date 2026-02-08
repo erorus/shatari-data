@@ -18,3 +18,5 @@
 1572924 DBFilesClient/ItemSparse.db2
 1261604 DBFilesClient/ItemSubClass.db2
 1375801 DBFilesClient/ManifestInterfaceData.db2
+7322704 DBFilesClient/ItemOffsetCurve.db2
+7322705 DBFilesClient/ItemScalingConfig.db2
