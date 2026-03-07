@@ -23,38 +23,6 @@ define('FORBIDDEN_CLASSES', [
 
 define('EXCLUDED_VENDOR_NPCS', [111838, 123124]);
 
-$squishCurveId = getSquishCurve();
-$squishCurve = [];
-if ($squishCurveId) {
-    echo "Loading squish curve {$squishCurveId}\n";
-    $curvePointReader = getReader('CurvePoint');
-    $curvePointReader->fetchColumnNames();
-    foreach ($curvePointReader->generateRecords() as $rec) {
-        if ($rec['CurveID'] === $squishCurveId) {
-            $squishCurve[] = $rec['Pos'];
-        }
-    }
-    usort($squishCurve, static fn (array $a, array $b) => $a[0] <=> $b[0]);
-    $getSquishedLevel = static function (int $level) use ($squishCurve): int {
-        [$lastX, $lastY] = $squishCurve[0];
-
-        foreach ($squishCurve as [$x, $y]) {
-            if ($level === $x) {
-                return $y;
-            }
-            if ($level < $x) {
-                return round(($y - $lastY) / ($x - $lastX) * ($level - $lastX) + $lastY);
-            }
-            [$lastX, $lastY] = [$x, $y];
-        }
-
-        return $lastY;
-    };
-} else {
-    echo "No squish curve in use!\n";
-    $getSquishedLevel = static fn (int $level) => $level;
-}
-
 echo "Opening import price readers...\n";
 $itemClassReader = getReader('ItemClass');
 $itemClassReader->fetchColumnNames();
@@ -132,6 +100,44 @@ foreach ($craftingQualityReader->generateRecords() as $id => $row) {
     $craftingQualities[$id] = $row['QualityTier'];
 }
 unset($craftingQualityReader);
+
+/**
+ * @param int $input
+ * @param int[][] $points
+ * @return int
+ */
+function applyCurve(int $input, array $points): int {
+    [$lastX, $lastY] = $points[0];
+
+    foreach ($points as [$x, $y]) {
+        if ($input === $x) {
+            return $y;
+        }
+        if ($input < $x) {
+            return round(($y - $lastY) / ($x - $lastX) * ($input - $lastX) + $lastY);
+        }
+        [$lastX, $lastY] = [$x, $y];
+    }
+
+    return $lastY;
+}
+
+$squishEras = getSquishEras();
+$squishItemLevel = static function (int $level, int $fromEra) use ($squishEras): ?int {
+    $result = null;
+
+    foreach ($squishEras as $row) {
+        if ($row['id'] > $fromEra && $row['curve']) {
+            $result = applyCurve($result ?? $level, $row['curve']);
+        }
+
+        if ($row['target'] ?? false) {
+            break;
+        }
+    }
+
+    return $result;
+};
 
 $items = [];
 $names = [
@@ -244,23 +250,23 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         case CLASS_RECIPE:
             $items[$id]['skill'] = $sparseRec['RequiredSkillRank'];
             break;
-        case CLASS_PROFESSION:
-            $items[$id]['inventoryType'] = $itemRec['InventoryType'];
-            $items[$id]['itemLevelRaw'] = $sparseRec['ItemLevel'];
-            $items[$id]['itemLevel'] = $getSquishedLevel($sparseRec['ItemLevel']);
-            break;
-        case CLASS_ARMOR:
-            $items[$id]['inventoryType'] = $itemRec['InventoryType'];
-            // no break
         case CLASS_WEAPON:
             if (isset($itemDisplays[$id])) {
                 $items[$id]['display'] = $itemDisplays[$id];
             }
             // no break
+        case CLASS_PROFESSION:
+        case CLASS_ARMOR:
+            $items[$id]['inventoryType'] = $itemRec['InventoryType'];
+            // no break
         case CLASS_GEM:
         case CLASS_ITEM_ENHANCEMENT:
-            $items[$id]['itemLevelRaw'] = $sparseRec['ItemLevel'];
-            $items[$id]['itemLevel'] = $getSquishedLevel($sparseRec['ItemLevel']);
+            $items[$id]['itemLevel'] = $sparseRec['ItemLevel'];
+            $items[$id]['squishEra'] = $sparseRec['ItemSquishEraID'];
+            $squishedLevel = $squishItemLevel($sparseRec['ItemLevel'], $sparseRec['ItemSquishEraID']);
+            if ($squishedLevel !== null) {
+                $items[$id]['squishedItemLevel'] = $squishedLevel;
+            }
             break;
     }
 
@@ -369,13 +375,7 @@ echo "Finished saving {$saved} items.\n";
 
 file_put_contents("{$outPath}/items.all.json", json_encode($items, OE_JSON_FLAGS));
 file_put_contents("{$outPath}/items.unbound.json", json_encode(
-    array_map(
-        static function ($item) {
-            unset($item['itemLevelRaw']);
-            return $item;
-        },
-        array_filter($items, static fn ($item) => !($item['bop'] ?? false))
-    ),
+    array_filter($items, static fn ($item) => !($item['bop'] ?? false)),
     OE_JSON_FLAGS,
 ));
 file_put_contents("{$outPath}/names.bound.enus.json", json_encode($names['bound'], OE_JSON_FLAGS));

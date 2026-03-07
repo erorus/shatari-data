@@ -92,33 +92,34 @@ function getReader(string $db2Name, string $locale = 'enus') {
         new Reader("{$db2Path}/{$db2Name}.db2");
 }
 
-/**
- * Returns the curve ID for level squishes.
- *
- * @return int
- */
-function getSquishCurve() {
-    static $result = null;
-    if ($result !== null) {
-        return $result;
+
+
+function getSquishEras(): array {
+    $squishEras = [];
+    $curveReader = getReader('CurvePoint');
+    $curveReader->fetchColumnNames();
+    $curves = [];
+    foreach ($curveReader->generateRecords() as $rec) {
+        $curves[$rec['CurveID']][$rec['OrderIndex']] = $rec['Pos'];
     }
 
-    $result = 0;
-
-    echo sprintf("Getting item squish curve for patch %d\n", SQUISH_PATCH);
     $reader = getReader('ItemSquishEra');
     $reader->fetchColumnNames();
-
-    $bestPatch = null;
-    foreach ($reader->generateRecords() as $rec) {
-        if ($rec['Patch'] > SQUISH_PATCH) {
-            continue;
+    foreach ($reader->generateRecords() as $id => $rec) {
+        $curve = $curves[$rec['CurveID']] ?? [];
+        ksort($curve, SORT_NUMERIC);
+        $eraRec = [
+            'id' => $id,
+            'patch' => $rec['Patch'],
+            'curve' => array_values($curve),
+            'flags' => $rec['Flags'],
+        ];
+        if ($eraRec['patch'] === SQUISH_PATCH) {
+            $eraRec['target'] = true;
         }
-        if ($bestPatch === null || $bestPatch < SQUISH_PATCH) {
-            $bestPatch = $rec['Patch'];
-            $result = $rec['CurveID'];
-        }
+        $squishEras[] = $eraRec;
     }
+    usort($squishEras, static fn ($a, $b) => ($a['patch'] <=> $b['patch']) ?: ($a['id'] <=> $b['id']));
 
-    return $result;
+    return $squishEras;
 }

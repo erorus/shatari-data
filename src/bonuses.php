@@ -37,10 +37,8 @@ $statBonuses = [];
 $scalingConfigs = [];
 $bonusCurveAdjustments = [];
 
-$squishCurve = getSquishCurve();
-if ($squishCurve) {
-    $seenCurves[$squishCurve] = true;
-}
+echo "Scanning squish eras...\n";
+$squishEras = getSquishEras();
 
 echo "Scanning bonuses...\n";
 foreach ($bonusReader->generateRecords() as $rec) {
@@ -170,7 +168,7 @@ file_put_contents("{$outPath}/bonuses.json", json_encode([
     'curvePoints' => $curvePoints,
     'statBonuses' => $statBonuses,
     'scalingConfigs' => $scalingConfigs,
-    'squishCurve' => $squishCurve,
+    'squishEras' => $squishEras,
 ], OE_JSON_FLAGS));
 
 $bonusToStats = [];
