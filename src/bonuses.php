@@ -22,23 +22,55 @@ $bonusReader->setFieldsSigned([
     array_search('Offset', $colNames) => true,
 ]);
 
+echo "Opening Content Tuning reader...\n";
+$contentTuningReader = getReader('ContentTuning');
+$contentTuningReader->fetchColumnNames();
+
+echo "Opening Curve reader...\n";
+$curveReader = getReader('CurvePoint');
+$colNames = $curveReader->fetchColumnNames();
+$curveReader->setFieldsSigned([
+    array_search('Pos', $colNames) => true,
+]);
+$curvePoints = [];
+foreach ($curveReader->generateRecords() as $rec) {
+    $curvePoints[$rec['CurveID']][$rec['OrderIndex']] = $rec['Pos'];
+}
+foreach ($curvePoints as &$points) {
+    ksort($points, SORT_NUMERIC);
+    $points = array_values($points);
+}
+unset($points);
+
 $tertiaryStats = [STAT_SPEED_RATING, STAT_LEECH_RATING, STAT_AVOIDANCE_RATING, STAT_INDESTRUCTIBLE_RATING];
 
 $seenNames = [];
 $seenCurves = [];
 $bonusNames = [];
-$playerLevelCurves = [];
-$bonusCurves = [];
-$bonusLevels = [];
-$bonusSetLevels = [];
 $nameToBonus = [];
 $excludeNameBonus = [];
 $statBonuses = [];
-$scalingConfigs = [];
-$bonusCurveAdjustments = [];
 
-echo "Scanning squish eras...\n";
+$levelData = [
+    'legacyAdjust'           => [], //  1
+    'contentTuning'          => [], // 13
+    'legacySet'              => [], // 42
+    'eraCurveSet'            => [], // 48
+    'itemScalingSet'         => [], // 49
+    'itemScalingSetByPlayer' => [], // 51
+    'eraAdjust'              => [], // 52
+    'adjust'                 => [], // 53
+];
+
+echo "Getting squish eras...\n";
 $squishEras = getSquishEras();
+$currentEra = 0;
+foreach ($squishEras as $era) {
+    if ($era['target'] ?? false) {
+        $currentEra = $era['id'];
+        break;
+    }
+}
 
 echo "Scanning bonuses...\n";
 foreach ($bonusReader->generateRecords() as $rec) {
@@ -52,7 +84,7 @@ foreach ($bonusReader->generateRecords() as $rec) {
     }
     switch ($rec['Type']) {
         case 1: // Adjust item level
-            $bonusLevels[$bonusId] = $rec['Value'][0];
+            $levelData['legacyAdjust'][$bonusId] = $rec['Value'][0];
             break;
 
         case 2: // Adjust stat
@@ -71,38 +103,57 @@ foreach ($bonusReader->generateRecords() as $rec) {
             break;
 
         case 13: // Player level curve
-            list($oldDist, $priority, $contentTuningId, $curveId) = $rec['Value'];
-            $seenCurves[$curveId] = true;
-            $playerLevelCurves[$bonusId] = [$priority, $curveId];
+            [$oldDist, $priority, $contentTuningId, $curveId] = $rec['Value'];
+            if ($curveId !== 0) {
+                $tuningRec = $contentTuningReader->getRecord($contentTuningId);
+                $playerMax = $tuningRec['MaxLevelSquish'] ?? 0;
+                $seenCurves[$curveId] = true;
+
+                $levelData['contentTuning'][$bonusId] = [$priority, $curveId, $playerMax];
+            }
             break;
 
         case 42: // Set item level
             [$level, $priority] = $rec['Value'];
-            $bonusSetLevels[$bonusId] = [$priority, $level];
+            $levelData['legacySet'][$bonusId] = [$priority, $level];
             break;
 
         case 48: // Item level curve
-            [$curveId, $level, $priority] = $rec['Value'];
+            [$curveId, $level, $itemSquishEra] = $rec['Value'];
             $seenCurves[$curveId] = true;
-            $bonusCurves[$bonusId] = [$priority, $curveId, $level];
+            $levelData['eraCurveSet'][$bonusId] = [$curveId, $level, $itemSquishEra];
             break;
 
         case 49: // Item scaling config
-            [$scalingConfigId] = $rec['Value'];
+        case 51: // Item scaling config by drop level
+            $dict = $rec['Type'] === 49 ? 'itemScalingSet' : 'itemScalingSetByPlayer';
+            [$scalingConfigId, $priority] = $rec['Value'];
             if ($configRec = $itemScalingConfigReader->getRecord($scalingConfigId)) {
                 if ($itemOffsetCurveRec = $itemOffsetCurveReader->getRecord($configRec['ItemOffsetCurveID'])) {
-                    $seenCurves[$itemOffsetCurveRec['CurveID']] = true;
-                    $scalingConfigs[$bonusId] = [
-                        $configRec['ItemLevel'],
-                        $itemOffsetCurveRec['CurveID'],
-                        $itemOffsetCurveRec['Offset'],
-                    ];
+                    if ($configRec['ItemLevel'] && $curve = $curvePoints[$itemOffsetCurveRec['CurveID']] ?? []) {
+                        $level = applyCurve($configRec['ItemLevel'], $curve) + $itemOffsetCurveRec['Offset'];
+                        $curve = 0;
+                        $offset = 0;
+                    } else {
+                        $level = $configRec['ItemLevel'];
+                        $curve = $itemOffsetCurveRec['CurveID'];
+                        $offset = $itemOffsetCurveRec['Offset'];
+                    }
+                    $seenCurves[$curve] = true;
+                    $era = ($configRec['Flags'] & 0x1) ? $currentEra : $configRec['ItemSquishEraID'];
+                    $levelData[$dict][$bonusId] = [$priority, $level, $curve, $offset, $era];
                 }
             }
             break;
 
-        case 53: // Adjust item level curve
-            $bonusCurveAdjustments[$bonusId] = $rec['Value'][0];
+        case 52: // Era adjust
+            [$amount, $era, $fallbackAmount] = $rec['Value'];
+            $levelData['eraAdjust'][$bonusId] = [$amount, $fallbackAmount, $era];
+            break;
+
+        case 53: // Adjust
+            [$amount, $priority] = $rec['Value'];
+            $levelData['adjust'][$bonusId] = [$priority, $amount];
             break;
     }
 }
@@ -139,35 +190,18 @@ foreach (LOCALES as $locale) {
 }
 unset($seenNames, $nameSuffixes);
 
-echo "Opening Curve reader...\n";
-$curveReader = getReader('CurvePoint');
-$colNames = $curveReader->fetchColumnNames();
-$curveReader->setFieldsSigned([
-    array_search('Pos', $colNames) => true,
-]);
-$curvePoints = [];
-foreach ($curveReader->generateRecords() as $rec) {
-    if (!isset($seenCurves[$rec['CurveID']])) {
-        continue;
+$saveCurves = [];
+foreach (array_keys($seenCurves) as $curveId) {
+    if (isset($curvePoints[$curveId])) {
+        $saveCurves[$curveId] = $curvePoints[$curveId];
     }
-    $curvePoints[$rec['CurveID']][$rec['OrderIndex']] = $rec['Pos'];
 }
-foreach ($curvePoints as &$points) {
-    ksort($points, SORT_NUMERIC);
-}
-unset($points);
-unset($curveReader, $seenCurves);
 
 file_put_contents("{$outPath}/bonuses.json", json_encode([
-    'levels' => $bonusLevels,
-    'setLevels' => $bonusSetLevels,
-    'playerLevelCurves' => $playerLevelCurves,
-    'bonusCurves' => $bonusCurves,
-    'bonusCurveAdjustments' => $bonusCurveAdjustments,
+    'levelData' => $levelData,
     'names' => $bonusNames,
-    'curvePoints' => $curvePoints,
+    'curvePoints' => $saveCurves,
     'statBonuses' => $statBonuses,
-    'scalingConfigs' => $scalingConfigs,
     'squishEras' => $squishEras,
 ], OE_JSON_FLAGS));
 

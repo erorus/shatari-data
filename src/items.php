@@ -101,27 +101,6 @@ foreach ($craftingQualityReader->generateRecords() as $id => $row) {
 }
 unset($craftingQualityReader);
 
-/**
- * @param int $input
- * @param int[][] $points
- * @return int
- */
-function applyCurve(int $input, array $points): int {
-    [$lastX, $lastY] = $points[0];
-
-    foreach ($points as [$x, $y]) {
-        if ($input === $x) {
-            return $y;
-        }
-        if ($input < $x) {
-            return round(($y - $lastY) / ($x - $lastX) * ($input - $lastX) + $lastY);
-        }
-        [$lastX, $lastY] = [$x, $y];
-    }
-
-    return $lastY;
-}
-
 $squishEras = getSquishEras();
 $squishItemLevel = static function (int $level, int $fromEra) use ($squishEras): ?int {
     $result = null;
