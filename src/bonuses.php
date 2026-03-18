@@ -72,12 +72,47 @@ foreach ($squishEras as $era) {
     }
 }
 
-echo "Scanning bonuses...\n";
-foreach ($bonusReader->generateRecords() as $rec) {
+echo "Setting up bonus row lookup...\n";
+$recordIdsByBonus = [];
+foreach ($bonusReader->generateRecords() as $id => $rec) {
     if (!isset($rec['ParentItemBonusListID'])) {
         print_r($rec);
         exit;
     }
+
+    $recordIdsByBonus[$rec['ParentItemBonusListID']][] = $id;
+}
+$getRecordsByBonus = static function (int $bonusId) use ($recordIdsByBonus, &$getRecordsByBonus, &$bonusReader): array {
+    $result = [];
+    foreach ($recordIdsByBonus[$bonusId] as $recordId) {
+        $rec = $bonusReader->getRecord($recordId);
+        if ($rec['Type'] === 50) {
+            foreach ($getRecordsByBonus($rec['Value'][0]) as $aliasRec) {
+                $aliasRec['ParentItemBonusListID'] = $bonusId;
+                $result[] = $aliasRec;
+            }
+        } else {
+            $result[] = $rec;
+        }
+    }
+
+    return $result;
+};
+$bonusScan = static function () use (&$bonusReader, $getRecordsByBonus) {
+    foreach ($bonusReader->generateRecords() as $rec) {
+        if ($rec['Type'] === 50) {
+            foreach ($getRecordsByBonus($rec['Value'][0]) as $aliasRec) {
+                $aliasRec['ParentItemBonusListID'] = $rec['ParentItemBonusListID'];
+                yield $aliasRec;
+            }
+        } else {
+            yield $rec;
+        }
+    }
+};
+
+echo "Scanning bonuses...\n";
+foreach ($bonusScan() as $rec) {
     $bonusId = $rec['ParentItemBonusListID'];
     if ($rec['Type'] !== 5) {
         $excludeNameBonus[$bonusId] = $bonusId;
