@@ -93,14 +93,6 @@ echo sprintf("Found %d icon associations, %d displays for items.\n", count($item
 $itemExpansions = json_decode(file_get_contents(__DIR__ . '/../expansion-items.json'), true);
 $vendorItems = json_decode(file_get_contents(__DIR__ . '/../vendor-items.json'), true);
 
-$craftingQualityReader = getReader('CraftingQuality');
-$craftingQualityReader->fetchColumnNames();
-$craftingQualities = [];
-foreach ($craftingQualityReader->generateRecords() as $id => $row) {
-    $craftingQualities[$id] = $row['QualityTier'];
-}
-unset($craftingQualityReader);
-
 $squishEras = getSquishEras();
 $squishItemLevel = static function (int $level, int $fromEra) use ($squishEras): ?int {
     $result = null;
@@ -212,8 +204,8 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         $items[$id]['side'] = SIDE_ALLIANCE;
     }
     $craftingQualityID = $itemRec['CraftingQualityID'] ?? $itemRec['Field_11_2_7_63642_010'] ?? null;
-    if ($craftingQualityID && isset($craftingQualities[$craftingQualityID])) {
-        $items[$id]['craftingQualityTier'] = $craftingQualities[$craftingQualityID];
+    if ($craftingQualityID) {
+        $items[$id]['craftingQualityId'] = $craftingQualityID;
     }
     // Crafted legendaries.
     if ($sparseRec['LimitCategory'] === 473) {

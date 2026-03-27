@@ -2,6 +2,7 @@
 801581 DBFilesClient/BattlePetSpeciesState.db2
 1962930 DBFilesClient/ContentTuning.db2
 4373538 DBFilesClient/CraftingQuality.db2
+7012110 DBFilesClient/CraftingQualityAtlasSet.db2
 841631 DBFilesClient/Creature.db2
 892586 DBFilesClient/CurvePoint.db2
 1394440 DBFilesClient/GlobalStrings.db2
@@ -22,3 +23,4 @@
 7322704 DBFilesClient/ItemOffsetCurve.db2
 7322705 DBFilesClient/ItemScalingConfig.db2
 7322706 DBFilesClient/ItemSquishEra.db2
+1989276 DBFilesClient/UiTextureAtlasElement.db2
