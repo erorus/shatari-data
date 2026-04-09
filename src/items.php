@@ -110,11 +110,18 @@ $squishItemLevel = static function (int $level, int $fromEra) use ($squishEras):
     return $result;
 };
 
-$items = [];
+$readJson = static function (string $name) use ($outPath): array {
+    return file_exists("{$outPath}/{$name}") ?
+        json_decode(file_get_contents("{$outPath}/{$name}"), true, flags: JSON_THROW_ON_ERROR) :
+        [];
+};
+
+$items = $readJson('items.all.json');
 $names = [
-    'bound' => [],
-    'unbound' => [],
+    'bound' => $readJson('names.bound.enus.json'),
+    'unbound' => $readJson('names.unbound.enus.json'),
 ];
+echo sprintf("Pre-loaded %d items.\n", count($items));
 echo "Opening Item reader...\n";
 $itemReader = getReader('Item');
 $itemReader->fetchColumnNames();
@@ -342,8 +349,9 @@ foreach ($itemReader->generateRecords() as $id => $itemRec) {
         }
     }
 }
-echo "Finished saving {$saved} items.\n";
+echo sprintf("Finished saving %d (total %d) items.\n", $saved, count($items));
 
+ksort($items, SORT_NUMERIC);
 file_put_contents("{$outPath}/items.all.json", json_encode($items, OE_JSON_FLAGS));
 file_put_contents("{$outPath}/items.unbound.json", json_encode(
     array_filter($items, static fn ($item) => !($item['bop'] ?? false)),
