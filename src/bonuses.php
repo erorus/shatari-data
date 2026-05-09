@@ -207,6 +207,7 @@ unset($bonuses);
 $nameToBonus = array_filter($nameToBonus);
 unset($excludeNameBonus);
 
+$nameSuffixesApi = [];
 foreach (LOCALES as $locale) {
     echo "Opening {$locale} Name reader...\n";
     $nameReader = getReader('ItemNameDescription', $locale);
@@ -219,11 +220,24 @@ foreach (LOCALES as $locale) {
             continue;
         }
         $nameSuffixes[$nameId] = ['name' => $nameRow['Description_lang'], 'bonus' => $nameToBonus[$nameId] ?? null];
+
+        $nameSuffixesApi[$nameId] ??= ['id' => $nameId, 'name' => []];
+        $nameSuffixesApi[$nameId]['name'][$locale] = $nameRow['Description_lang'];
     }
     unset($nameReader);
     file_put_contents("{$outPath}/name-suffixes.{$locale}.json", json_encode($nameSuffixes, OE_JSON_FLAGS));
 }
 unset($seenNames, $nameSuffixes);
+ksort($nameSuffixesApi, SORT_NUMERIC);
+$nameSuffixesApi = [
+    'request' => ['list' => 'suffixes'],
+    'result' => [
+        'lastUpdated' => preg_replace('/\+00:00$/', 'Z', date('c')),
+        'suffixes' => array_values($nameSuffixesApi),
+    ],
+];
+file_put_contents("{$outPath}/name-suffixes.api.json", json_encode($nameSuffixesApi, OE_JSON_FLAGS));
+unset($nameSuffixesApi);
 
 $saveCurves = [];
 foreach (array_keys($seenCurves) as $curveId) {
